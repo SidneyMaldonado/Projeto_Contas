@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Contas_App/Contas_App.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="Contas_Biz/Contas_Biz.csproj" />
+  <Project Path="Contas_Db/Contas_Db.csproj" />
+</Solution>
