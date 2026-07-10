@@ -1,6 +1,6 @@
 USE [test_fin]
 GO
-/****** Objeto:  Table [dbo].[tb_categoria]    Data do Script: 03/07/2026 09:39:15 ******/
+/****** Objeto:  Table [dbo].[tb_categoria]    Data do Script: 08/07/2026 13:38:44 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -8,7 +8,7 @@ GO
 CREATE TABLE [dbo].[tb_categoria](
 	[id_categoria] [int] IDENTITY(1,1) NOT NULL,
 	[nm_categoria] [nvarchar](100) NOT NULL,
-	[img_categoria] [image] NULL,
+	[img_categoria] [varbinary](max) NULL,
 	[dm_ativo] [bit] NOT NULL,
  CONSTRAINT [PK_tb_categoria] PRIMARY KEY CLUSTERED 
 (
@@ -16,7 +16,7 @@ CREATE TABLE [dbo].[tb_categoria](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_conta]    Data do Script: 03/07/2026 09:39:15 ******/
+/****** Objeto:  Table [dbo].[tb_conta]    Data do Script: 08/07/2026 13:38:44 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -25,16 +25,16 @@ CREATE TABLE [dbo].[tb_conta](
 	[id_conta] [int] IDENTITY(1,1) NOT NULL,
 	[id_usuario] [int] NOT NULL,
 	[nm_conta] [nvarchar](100) NOT NULL,
-	[img_conta] [int] NULL,
+	[img_conta] [varbinary](max) NULL,
 	[nr_saldo] [numeric](10, 2) NOT NULL,
 	[dm_ativo] [bit] NOT NULL,
  CONSTRAINT [PK_tb_conta] PRIMARY KEY CLUSTERED 
 (
 	[id_conta] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_credor]    Data do Script: 03/07/2026 09:39:15 ******/
+/****** Objeto:  Table [dbo].[tb_credor]    Data do Script: 08/07/2026 13:38:44 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -43,7 +43,7 @@ CREATE TABLE [dbo].[tb_credor](
 	[id_credor] [int] IDENTITY(1,1) NOT NULL,
 	[nm_credor] [nvarchar](50) NOT NULL,
 	[ds_observacoes] [nvarchar](max) NULL,
-	[img_logo] [image] NULL,
+	[img_logo] [varbinary](max) NULL,
 	[dm_ativo] [bit] NOT NULL,
  CONSTRAINT [PK_tb_credor] PRIMARY KEY CLUSTERED 
 (
@@ -51,7 +51,7 @@ CREATE TABLE [dbo].[tb_credor](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_divida]    Data do Script: 03/07/2026 09:39:15 ******/
+/****** Objeto:  Table [dbo].[tb_divida]    Data do Script: 08/07/2026 13:38:44 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -65,14 +65,14 @@ CREATE TABLE [dbo].[tb_divida](
 	[dt_primeiro_vencimento] [datetime] NOT NULL,
 	[nr_parcelas] [int] NOT NULL,
 	[nr_valor] [numeric](10, 2) NOT NULL,
-	[dm_ativo] [int] NULL,
+	[dm_ativo] [bit] NOT NULL,
  CONSTRAINT [PK_tb_divida] PRIMARY KEY CLUSTERED 
 (
 	[id_divida] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_parcela]    Data do Script: 03/07/2026 09:39:15 ******/
+/****** Objeto:  Table [dbo].[tb_parcela]    Data do Script: 08/07/2026 13:38:44 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -81,10 +81,11 @@ CREATE TABLE [dbo].[tb_parcela](
 	[id_parcela] [int] IDENTITY(1,1) NOT NULL,
 	[id_divida] [int] NOT NULL,
 	[id_categoria] [int] NOT NULL,
+	[id_conta] [int] NOT NULL,
 	[ds_parcela] [nvarchar](100) NOT NULL,
 	[nr_valor] [numeric](10, 2) NOT NULL,
 	[dt_vencimento] [datetime] NOT NULL,
-	[dt_pagamento] [datetime] NOT NULL,
+	[dt_pagamento] [datetime] NULL,
 	[dm_ativo] [bit] NOT NULL,
  CONSTRAINT [PK_tb_parcela] PRIMARY KEY CLUSTERED 
 (
@@ -92,7 +93,7 @@ CREATE TABLE [dbo].[tb_parcela](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_usuario]    Data do Script: 03/07/2026 09:39:15 ******/
+/****** Objeto:  Table [dbo].[tb_usuario]    Data do Script: 08/07/2026 13:38:44 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -100,14 +101,19 @@ GO
 CREATE TABLE [dbo].[tb_usuario](
 	[id_usuario] [int] IDENTITY(1,1) NOT NULL,
 	[nm_usuario] [nvarchar](100) NOT NULL,
-	[ds_emaill] [nvarchar](100) NOT NULL,
+	[ds_email] [nvarchar](100) NOT NULL,
 	[ds_senha] [nvarchar](100) NOT NULL,
+	[img_usuario] [varbinary](max) NULL,
 	[dm_ativo] [bit] NOT NULL,
  CONSTRAINT [PK_tb_usuario] PRIMARY KEY CLUSTERED 
 (
 	[id_usuario] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_tb_usuario_ds_email] UNIQUE NONCLUSTERED 
+(
+	[ds_email] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[tb_categoria] ADD  CONSTRAINT [DF_tb_categoria_dm_ativo]  DEFAULT ((1)) FOR [dm_ativo]
 GO
@@ -153,8 +159,17 @@ REFERENCES [dbo].[tb_categoria] ([id_categoria])
 GO
 ALTER TABLE [dbo].[tb_parcela] CHECK CONSTRAINT [FK_tb_parcela_tb_categoria]
 GO
+ALTER TABLE [dbo].[tb_parcela]  WITH CHECK ADD  CONSTRAINT [FK_tb_parcela_tb_conta] FOREIGN KEY([id_conta])
+REFERENCES [dbo].[tb_conta] ([id_conta])
+GO
+ALTER TABLE [dbo].[tb_parcela] CHECK CONSTRAINT [FK_tb_parcela_tb_conta]
+GO
 ALTER TABLE [dbo].[tb_parcela]  WITH CHECK ADD  CONSTRAINT [FK_tb_parcela_tb_divida] FOREIGN KEY([id_divida])
 REFERENCES [dbo].[tb_divida] ([id_divida])
 GO
 ALTER TABLE [dbo].[tb_parcela] CHECK CONSTRAINT [FK_tb_parcela_tb_divida]
+GO
+ALTER TABLE [dbo].[tb_divida]  WITH CHECK ADD  CONSTRAINT [CK_tb_divida_dia_vencimento] CHECK  (([dia_vencimento]>=(1) AND [dia_vencimento]<=(31)))
+GO
+ALTER TABLE [dbo].[tb_divida] CHECK CONSTRAINT [CK_tb_divida_dia_vencimento]
 GO

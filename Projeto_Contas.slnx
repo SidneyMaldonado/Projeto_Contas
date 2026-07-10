@@ -4,4 +4,5 @@
   </Project>
   <Project Path="Contas_Biz/Contas_Biz.csproj" />
   <Project Path="Contas_Db/Contas_Db.csproj" />
+  <Project Path="Contas_Test/Contas_Test.csproj" Id="536acd50-5f72-4e79-a136-6ba20d31c355" />
 </Solution>
