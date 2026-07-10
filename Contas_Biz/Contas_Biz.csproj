@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Contas_Db\Contas_Db.csproj" />
+  </ItemGroup>
+
 </Project>

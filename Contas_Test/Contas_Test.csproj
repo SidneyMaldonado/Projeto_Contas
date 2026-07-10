@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Contas_Db\Contas_Db.csproj" />
+    <ProjectReference Include="..\Contas_Biz\Contas_Biz.csproj" />
   </ItemGroup>
 
 </Project>
