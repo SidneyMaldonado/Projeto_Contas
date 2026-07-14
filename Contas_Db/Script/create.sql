@@ -1,6 +1,6 @@
 USE [test_fin]
 GO
-/****** Objeto:  Table [dbo].[tb_categoria]    Data do Script: 08/07/2026 13:38:44 ******/
+/****** Objeto:  Table [dbo].[tb_categoria]    Data do Script: 14/07/2026 16:52:22 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -16,7 +16,7 @@ CREATE TABLE [dbo].[tb_categoria](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_conta]    Data do Script: 08/07/2026 13:38:44 ******/
+/****** Objeto:  Table [dbo].[tb_conta]    Data do Script: 14/07/2026 16:52:22 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -34,7 +34,7 @@ CREATE TABLE [dbo].[tb_conta](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_credor]    Data do Script: 08/07/2026 13:38:44 ******/
+/****** Objeto:  Table [dbo].[tb_credor]    Data do Script: 14/07/2026 16:52:22 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -51,7 +51,7 @@ CREATE TABLE [dbo].[tb_credor](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_divida]    Data do Script: 08/07/2026 13:38:44 ******/
+/****** Objeto:  Table [dbo].[tb_divida]    Data do Script: 14/07/2026 16:52:22 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -72,7 +72,7 @@ CREATE TABLE [dbo].[tb_divida](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_parcela]    Data do Script: 08/07/2026 13:38:44 ******/
+/****** Objeto:  Table [dbo].[tb_parcela]    Data do Script: 14/07/2026 16:52:22 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -93,7 +93,7 @@ CREATE TABLE [dbo].[tb_parcela](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_usuario]    Data do Script: 08/07/2026 13:38:44 ******/
+/****** Objeto:  Table [dbo].[tb_usuario]    Data do Script: 14/07/2026 16:52:22 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
