@@ -16,4 +16,9 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
     {
         return await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email && u.Ativo);
     }
+
+    public async Task<bool> EmailExisteAsync(string email)
+    {
+        return await _context.Usuarios.AnyAsync(u => u.Email == email);
+    }
 }

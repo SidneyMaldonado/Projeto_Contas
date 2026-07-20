@@ -29,7 +29,7 @@ namespace Contas_Test
             _context.Dispose();
         }
 
-        private static Usuario CriarUsuario(string nome = "João", string email = "joao@teste.com", string senha = "senha123") => new()
+        private static Usuario CriarUsuario(string nome = "João", string email = "joao@teste.com", string senha = "Senha123") => new()
         {
             Nome = nome,
             Email = email,
@@ -41,14 +41,60 @@ namespace Contas_Test
         public async Task AdicionarUsuarioUseCase_DeveHashearSenhaAntesDePersistir()
         {
             var useCase = new AdicionarUsuarioUseCase(_repository);
-            var usuario = CriarUsuario(senha: "senha123");
+            var usuario = CriarUsuario(senha: "Senha123");
 
             await useCase.ExecuteAsync(usuario);
 
             var resultado = await _repository.GetByIdAsync(usuario.Id);
             Assert.IsNotNull(resultado);
-            Assert.AreNotEqual("senha123", resultado!.Senha);
-            Assert.IsTrue(PasswordHasher.Verify("senha123", resultado.Senha));
+            Assert.AreNotEqual("Senha123", resultado!.Senha);
+            Assert.IsTrue(PasswordHasher.Verify("Senha123", resultado.Senha));
+        }
+
+        [TestMethod]
+        public async Task AdicionarUsuarioUseCase_DeveLancarExcecao_QuandoNomeMenorQue3Caracteres()
+        {
+            var useCase = new AdicionarUsuarioUseCase(_repository);
+            var usuario = CriarUsuario(nome: "Jo");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(usuario));
+        }
+
+        [TestMethod]
+        public async Task AdicionarUsuarioUseCase_DeveLancarExcecao_QuandoNomeVazio()
+        {
+            var useCase = new AdicionarUsuarioUseCase(_repository);
+            var usuario = CriarUsuario(nome: "");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(usuario));
+        }
+
+        [TestMethod]
+        public async Task AdicionarUsuarioUseCase_DeveLancarExcecao_QuandoEmailInvalido()
+        {
+            var useCase = new AdicionarUsuarioUseCase(_repository);
+            var usuario = CriarUsuario(email: "email-invalido");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(usuario));
+        }
+
+        [TestMethod]
+        public async Task AdicionarUsuarioUseCase_DeveLancarExcecao_QuandoEmailJaCadastrado()
+        {
+            var useCase = new AdicionarUsuarioUseCase(_repository);
+            await useCase.ExecuteAsync(CriarUsuario("João", "joao@teste.com"));
+            var usuario = CriarUsuario("Outro João", "joao@teste.com");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(usuario));
+        }
+
+        [TestMethod]
+        public async Task AdicionarUsuarioUseCase_DeveLancarExcecao_QuandoSenhaFraca()
+        {
+            var useCase = new AdicionarUsuarioUseCase(_repository);
+            var usuario = CriarUsuario(senha: "senhafraca");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(usuario));
         }
 
         [TestMethod]
@@ -123,11 +169,11 @@ namespace Contas_Test
         [TestMethod]
         public async Task LoginUsuarioUseCase_DeveRetornarUsuarioComSenhaCorreta()
         {
-            var usuario = CriarUsuario(senha: "senha123");
+            var usuario = CriarUsuario(senha: "Senha123");
             await new AdicionarUsuarioUseCase(_repository).ExecuteAsync(usuario);
             var useCase = new LoginUsuarioUseCase(_repository);
 
-            var resultado = await useCase.ExecuteAsync("joao@teste.com", "senha123");
+            var resultado = await useCase.ExecuteAsync("joao@teste.com", "Senha123");
 
             Assert.IsNotNull(resultado);
             Assert.AreEqual(usuario.Id, resultado!.Id);
@@ -136,7 +182,7 @@ namespace Contas_Test
         [TestMethod]
         public async Task LoginUsuarioUseCase_DeveRetornarNuloComSenhaIncorreta()
         {
-            var usuario = CriarUsuario(senha: "senha123");
+            var usuario = CriarUsuario(senha: "Senha123");
             await new AdicionarUsuarioUseCase(_repository).ExecuteAsync(usuario);
             var useCase = new LoginUsuarioUseCase(_repository);
 
@@ -148,12 +194,12 @@ namespace Contas_Test
         [TestMethod]
         public async Task LoginUsuarioUseCase_DeveRetornarNuloQuandoUsuarioInativo()
         {
-            var usuario = CriarUsuario(senha: "senha123");
+            var usuario = CriarUsuario(senha: "Senha123");
             await new AdicionarUsuarioUseCase(_repository).ExecuteAsync(usuario);
             await _repository.SoftDeleteAsync(usuario.Id);
             var useCase = new LoginUsuarioUseCase(_repository);
 
-            var resultado = await useCase.ExecuteAsync("joao@teste.com", "senha123");
+            var resultado = await useCase.ExecuteAsync("joao@teste.com", "Senha123");
 
             Assert.IsNull(resultado);
         }
@@ -161,22 +207,22 @@ namespace Contas_Test
         [TestMethod]
         public async Task AlterarSenhaUsuarioUseCase_DeveTrocarSenhaComSenhaAtualCorreta()
         {
-            var usuario = CriarUsuario(senha: "senhaAntiga");
+            var usuario = CriarUsuario(senha: "SenhaAntiga1");
             await new AdicionarUsuarioUseCase(_repository).ExecuteAsync(usuario);
             var alterarSenha = new AlterarSenhaUsuarioUseCase(_repository);
 
-            var sucesso = await alterarSenha.ExecuteAsync(usuario.Id, "senhaAntiga", "senhaNova");
+            var sucesso = await alterarSenha.ExecuteAsync(usuario.Id, "SenhaAntiga1", "senhaNova");
 
             Assert.IsTrue(sucesso);
             var login = new LoginUsuarioUseCase(_repository);
             Assert.IsNotNull(await login.ExecuteAsync("joao@teste.com", "senhaNova"));
-            Assert.IsNull(await login.ExecuteAsync("joao@teste.com", "senhaAntiga"));
+            Assert.IsNull(await login.ExecuteAsync("joao@teste.com", "SenhaAntiga1"));
         }
 
         [TestMethod]
         public async Task AlterarSenhaUsuarioUseCase_DeveFalharComSenhaAtualIncorreta()
         {
-            var usuario = CriarUsuario(senha: "senhaAntiga");
+            var usuario = CriarUsuario(senha: "SenhaAntiga1");
             await new AdicionarUsuarioUseCase(_repository).ExecuteAsync(usuario);
             var alterarSenha = new AlterarSenhaUsuarioUseCase(_repository);
 
@@ -184,7 +230,7 @@ namespace Contas_Test
 
             Assert.IsFalse(sucesso);
             var login = new LoginUsuarioUseCase(_repository);
-            Assert.IsNotNull(await login.ExecuteAsync("joao@teste.com", "senhaAntiga"));
+            Assert.IsNotNull(await login.ExecuteAsync("joao@teste.com", "SenhaAntiga1"));
         }
     }
 }

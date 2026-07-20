@@ -47,6 +47,15 @@ namespace Contas_Test
         }
 
         [TestMethod]
+        public async Task AdicionarCredorUseCase_DeveLancarExcecao_QuandoNomeMenorQue3Caracteres()
+        {
+            var useCase = new AdicionarCredorUseCase(_repository);
+            var credor = CriarCredor("Ba");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(credor));
+        }
+
+        [TestMethod]
         public async Task ObterPorIdCredorUseCase_DeveRetornarCredorExistente()
         {
             var credor = CriarCredor("Banco Y");

@@ -1,3 +1,4 @@
+using Contas_Core.Biz;
 using Contas_Db.Repository;
 
 namespace Contas_Core.UseCase.Categoria;
@@ -11,5 +12,11 @@ public class AdicionarCategoriaUseCase
         _repository = repository;
     }
 
-    public Task ExecuteAsync(Contas_Db.Model.Categoria entity) => _repository.AddAsync(entity);
+    public Task ExecuteAsync(Contas_Db.Model.Categoria entity)
+    {
+        if (!new AdicionarCategoriaBiz().IsValid(entity))
+            throw new ArgumentException("Categoria inválida: verifique o nome.");
+
+        return _repository.AddAsync(entity);
+    }
 }

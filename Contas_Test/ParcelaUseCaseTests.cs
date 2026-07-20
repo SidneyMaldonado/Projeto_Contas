@@ -52,6 +52,16 @@ namespace Contas_Test
         }
 
         [TestMethod]
+        public async Task AdicionarParcelaUseCase_DeveLancarExcecao_QuandoValorNegativoOuZero()
+        {
+            var useCase = new AdicionarParcelaUseCase(_repository);
+            var parcela = CriarParcela();
+            parcela.Valor = 0m;
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(parcela));
+        }
+
+        [TestMethod]
         public async Task ObterPorIdParcelaUseCase_DeveRetornarParcelaExistente()
         {
             var parcela = CriarParcela("Parcela 2/12");

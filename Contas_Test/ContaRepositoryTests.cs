@@ -133,5 +133,30 @@ namespace Contas_Test
 
             Assert.AreEqual(0, await _context.Contas.CountAsync());
         }
+
+        [TestMethod]
+        public async Task AtualizarSaldosAsync_DeveAtualizarSaldoDeVariasContas()
+        {
+            var conta1 = CriarConta("Conta 1");
+            var conta2 = CriarConta("Conta 2");
+            await _repository.AddAsync(conta1);
+            await _repository.AddAsync(conta2);
+            var contaRepository = new ContaRepository(_context);
+
+            await contaRepository.AtualizarSaldosAsync([(conta1.Id, 200m), (conta2.Id, 300m)]);
+
+            Assert.AreEqual(200m, (await _repository.GetByIdAsync(conta1.Id))!.Saldo);
+            Assert.AreEqual(300m, (await _repository.GetByIdAsync(conta2.Id))!.Saldo);
+        }
+
+        [TestMethod]
+        public async Task AtualizarSaldosAsync_NaoDeveFalharQuandoIdNaoExiste()
+        {
+            var contaRepository = new ContaRepository(_context);
+
+            await contaRepository.AtualizarSaldosAsync([(999, 200m)]);
+
+            Assert.AreEqual(0, await _context.Contas.CountAsync());
+        }
     }
 }

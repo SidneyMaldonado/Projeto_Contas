@@ -1,3 +1,4 @@
+using Contas_Core.Biz;
 using Contas_Core.Security;
 using Contas_Db.Repository;
 
@@ -5,16 +6,19 @@ namespace Contas_Core.UseCase.Usuario;
 
 public class AdicionarUsuarioUseCase
 {
-    private readonly IRepository<Contas_Db.Model.Usuario> _repository;
+    private readonly IUsuarioRepository _repository;
 
-    public AdicionarUsuarioUseCase(IRepository<Contas_Db.Model.Usuario> repository)
+    public AdicionarUsuarioUseCase(IUsuarioRepository repository)
     {
         _repository = repository;
     }
 
-    public Task ExecuteAsync(Contas_Db.Model.Usuario entity)
+    public async Task ExecuteAsync(Contas_Db.Model.Usuario entity)
     {
+        if (!await new AdicionarUsuarioBiz(_repository).IsValidAsync(entity))
+            throw new ArgumentException("Usuário inválido: verifique nome, e-mail, senha ou se o e-mail já está cadastrado.");
+
         entity.Senha = PasswordHasher.Hash(entity.Senha);
-        return _repository.AddAsync(entity);
+        await _repository.AddAsync(entity);
     }
 }
