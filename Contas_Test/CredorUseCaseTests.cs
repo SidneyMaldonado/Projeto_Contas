@@ -1,4 +1,4 @@
-using Contas_Biz.UseCase.Credor;
+using Contas_Core.UseCase.Credor;
 using Contas_Db.Model;
 using Contas_Db.Repository;
 using Microsoft.EntityFrameworkCore;
