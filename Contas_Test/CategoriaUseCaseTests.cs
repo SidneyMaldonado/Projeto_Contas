@@ -47,6 +47,15 @@ namespace Contas_Test
         }
 
         [TestMethod]
+        public async Task AdicionarCategoriaUseCase_DeveLancarExcecao_QuandoNomeMenorQue3Caracteres()
+        {
+            var useCase = new AdicionarCategoriaUseCase(_repository);
+            var categoria = CriarCategoria("La");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(categoria));
+        }
+
+        [TestMethod]
         public async Task ObterPorIdCategoriaUseCase_DeveRetornarCategoriaExistente()
         {
             var categoria = CriarCategoria("Transporte");

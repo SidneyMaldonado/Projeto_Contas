@@ -33,7 +33,7 @@ namespace Contas_Test
             IdUsuario = 1,
             Nome = nome,
             DiaVencimento = 10,
-            DataPrimeiroVencimento = new DateTime(2026, 1, 10),
+            DataPrimeiroVencimento = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 10).AddMonths(1),
             Parcelas = 12,
             Valor = 1000m,
             Ativo = true
@@ -49,6 +49,65 @@ namespace Contas_Test
 
             Assert.AreEqual(1, await _context.Dividas.CountAsync());
             Assert.AreNotEqual(0, divida.Id);
+        }
+
+        [TestMethod]
+        public async Task AdicionarDividaUseCase_DeveLancarExcecao_QuandoNomeMenorQue3Caracteres()
+        {
+            var useCase = new AdicionarDividaUseCase(_repository);
+            var divida = CriarDivida("Fi");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(divida));
+        }
+
+        [TestMethod]
+        public async Task AdicionarDividaUseCase_DeveLancarExcecao_QuandoValorNegativoOuZero()
+        {
+            var useCase = new AdicionarDividaUseCase(_repository);
+            var divida = CriarDivida();
+            divida.Valor = 0m;
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(divida));
+        }
+
+        [TestMethod]
+        public async Task AdicionarDividaUseCase_DeveLancarExcecao_QuandoDataVencimentoNoPassado()
+        {
+            var useCase = new AdicionarDividaUseCase(_repository);
+            var divida = CriarDivida();
+            divida.DataPrimeiroVencimento = DateTime.Today.AddDays(-1);
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(divida));
+        }
+
+        [TestMethod]
+        public async Task AdicionarDividaUseCase_DeveLancarExcecao_QuandoDiaVencimentoForaDoIntervalo()
+        {
+            var useCase = new AdicionarDividaUseCase(_repository);
+            var divida = CriarDivida();
+            divida.DiaVencimento = 32;
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(divida));
+        }
+
+        [TestMethod]
+        public async Task AdicionarDividaUseCase_DeveLancarExcecao_QuandoParcelasMenorQue1()
+        {
+            var useCase = new AdicionarDividaUseCase(_repository);
+            var divida = CriarDivida();
+            divida.Parcelas = 0;
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(divida));
+        }
+
+        [TestMethod]
+        public async Task AdicionarDividaUseCase_DeveLancarExcecao_QuandoDiaVencimentoInconsistenteComData()
+        {
+            var useCase = new AdicionarDividaUseCase(_repository);
+            var divida = CriarDivida();
+            divida.DiaVencimento = 15;
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(() => useCase.ExecuteAsync(divida));
         }
 
         [TestMethod]

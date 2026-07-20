@@ -1,3 +1,4 @@
+using Contas_Core.Biz;
 using Contas_Db.Repository;
 
 namespace Contas_Core.UseCase.Parcela;
@@ -11,5 +12,11 @@ public class AdicionarParcelaUseCase
         _repository = repository;
     }
 
-    public Task ExecuteAsync(Contas_Db.Model.Parcela entity) => _repository.AddAsync(entity);
+    public Task ExecuteAsync(Contas_Db.Model.Parcela entity)
+    {
+        if (!new AdicionarParcelaBiz().IsValid(entity))
+            throw new ArgumentException("Parcela inválida: verifique o valor.");
+
+        return _repository.AddAsync(entity);
+    }
 }
