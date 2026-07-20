@@ -1,4 +1,4 @@
-using Contas_Biz.UseCase.Parcela;
+using Contas_Core.UseCase.Parcela;
 using Contas_Db.Model;
 using Contas_Db.Repository;
 using Microsoft.EntityFrameworkCore;

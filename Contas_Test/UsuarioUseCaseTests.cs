@@ -1,5 +1,5 @@
-using Contas_Biz.Security;
-using Contas_Biz.UseCase.Usuario;
+using Contas_Core.Security;
+using Contas_Core.UseCase.Usuario;
 using Contas_Db.Model;
 using Contas_Db.Repository;
 using Microsoft.EntityFrameworkCore;
