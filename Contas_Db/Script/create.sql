@@ -1,6 +1,6 @@
 USE [test_fin]
 GO
-/****** Objeto:  Table [dbo].[tb_categoria]    Data do Script: 14/07/2026 16:52:22 ******/
+/****** Objeto:  Table [dbo].[tb_categoria]    Data do Script: 20/07/2026 09:22:34 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -16,7 +16,7 @@ CREATE TABLE [dbo].[tb_categoria](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_conta]    Data do Script: 14/07/2026 16:52:22 ******/
+/****** Objeto:  Table [dbo].[tb_conta]    Data do Script: 20/07/2026 09:22:34 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -34,7 +34,7 @@ CREATE TABLE [dbo].[tb_conta](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_credor]    Data do Script: 14/07/2026 16:52:22 ******/
+/****** Objeto:  Table [dbo].[tb_credor]    Data do Script: 20/07/2026 09:22:34 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -51,7 +51,7 @@ CREATE TABLE [dbo].[tb_credor](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_divida]    Data do Script: 14/07/2026 16:52:22 ******/
+/****** Objeto:  Table [dbo].[tb_divida]    Data do Script: 20/07/2026 09:22:34 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -72,7 +72,7 @@ CREATE TABLE [dbo].[tb_divida](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_parcela]    Data do Script: 14/07/2026 16:52:22 ******/
+/****** Objeto:  Table [dbo].[tb_parcela]    Data do Script: 20/07/2026 09:22:34 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -93,7 +93,7 @@ CREATE TABLE [dbo].[tb_parcela](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Objeto:  Table [dbo].[tb_usuario]    Data do Script: 14/07/2026 16:52:22 ******/
+/****** Objeto:  Table [dbo].[tb_usuario]    Data do Script: 20/07/2026 09:22:34 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -172,4 +172,28 @@ GO
 ALTER TABLE [dbo].[tb_divida]  WITH CHECK ADD  CONSTRAINT [CK_tb_divida_dia_vencimento] CHECK  (([dia_vencimento]>=(1) AND [dia_vencimento]<=(31)))
 GO
 ALTER TABLE [dbo].[tb_divida] CHECK CONSTRAINT [CK_tb_divida_dia_vencimento]
+GO
+ALTER TABLE [dbo].[tb_conta]  WITH CHECK ADD  CONSTRAINT [CK_tb_conta_nr_saldo] CHECK  (([nr_saldo]>=(0)))
+GO
+ALTER TABLE [dbo].[tb_conta] CHECK CONSTRAINT [CK_tb_conta_nr_saldo]
+GO
+ALTER TABLE [dbo].[tb_divida]  WITH CHECK ADD  CONSTRAINT [CK_tb_divida_nr_valor] CHECK  (([nr_valor]>=(0)))
+GO
+ALTER TABLE [dbo].[tb_divida] CHECK CONSTRAINT [CK_tb_divida_nr_valor]
+GO
+ALTER TABLE [dbo].[tb_parcela]  WITH CHECK ADD  CONSTRAINT [CK_tb_parcela_nr_valor] CHECK  (([nr_valor]>=(0)))
+GO
+ALTER TABLE [dbo].[tb_parcela] CHECK CONSTRAINT [CK_tb_parcela_nr_valor]
+GO
+CREATE NONCLUSTERED INDEX [IX_tb_conta_id_usuario] ON [dbo].[tb_conta] ([id_usuario] ASC)
+GO
+CREATE NONCLUSTERED INDEX [IX_tb_divida_id_usuario] ON [dbo].[tb_divida] ([id_usuario] ASC)
+GO
+CREATE NONCLUSTERED INDEX [IX_tb_divida_id_credor] ON [dbo].[tb_divida] ([id_credor] ASC)
+GO
+CREATE NONCLUSTERED INDEX [IX_tb_parcela_id_categoria] ON [dbo].[tb_parcela] ([id_categoria] ASC)
+GO
+CREATE NONCLUSTERED INDEX [IX_tb_parcela_id_conta] ON [dbo].[tb_parcela] ([id_conta] ASC)
+GO
+CREATE NONCLUSTERED INDEX [IX_tb_parcela_id_divida] ON [dbo].[tb_parcela] ([id_divida] ASC)
 GO
