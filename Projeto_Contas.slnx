@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Contas_Api/Contas_Api.csproj" Id="0f831833-814f-4a36-b593-06d4383f430e" />
   <Project Path="Contas_App/Contas_App.csproj">
     <Deploy Solution="Debug|*" />
   </Project>
