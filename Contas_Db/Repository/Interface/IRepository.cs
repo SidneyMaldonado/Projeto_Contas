@@ -1,6 +1,6 @@
-using Contas_Db.Model;
+using Contas_Db.Model.Interface;
 
-namespace Contas_Db.Repository;
+namespace Contas_Db.Repository.Interface;
 
 public interface IRepository<T> where T : class, ISoftDelete
 {

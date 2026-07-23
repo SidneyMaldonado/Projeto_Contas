@@ -1,6 +1,7 @@
 using Contas_Core.UseCase.Credor;
 using Contas_Db.Model;
 using Contas_Db.Repository;
+using Contas_Db.Repository.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace Contas_Test

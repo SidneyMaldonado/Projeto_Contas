@@ -1,6 +1,6 @@
 using Contas_Core.Biz;
 using Contas_Core.Security;
-using Contas_Db.Repository;
+using Contas_Db.Repository.Interface;
 
 namespace Contas_Core.UseCase.Usuario;
 

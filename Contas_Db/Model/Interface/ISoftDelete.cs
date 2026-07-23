@@ -1,4 +1,4 @@
-namespace Contas_Db.Model;
+namespace Contas_Db.Model.Interface;
 
 public interface ISoftDelete
 {

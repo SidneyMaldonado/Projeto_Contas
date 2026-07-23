@@ -1,4 +1,6 @@
 using Contas_Db.Model;
+using Contas_Db.Model.Interface;
+using Contas_Db.Repository.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace Contas_Db.Repository;

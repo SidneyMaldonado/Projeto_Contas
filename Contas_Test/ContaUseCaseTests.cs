@@ -2,6 +2,7 @@ using Contas_Core.Dto;
 using Contas_Core.UseCase.Conta;
 using Contas_Db.Model;
 using Contas_Db.Repository;
+using Contas_Db.Repository.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace Contas_Test

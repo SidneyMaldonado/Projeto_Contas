@@ -1,5 +1,5 @@
 using System.Linq;
-using Contas_Db.Repository;
+using Contas_Db.Repository.Interface;
 
 namespace Contas_Core.Biz;
 
