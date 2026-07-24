@@ -4,7 +4,7 @@ using Contas_Db.Repository;
 using Contas_Db.Repository.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace Contas_Test
+namespace Contas_Test.UseCase_Tests
 {
     [TestClass]
     public sealed class CategoriaUseCaseTests

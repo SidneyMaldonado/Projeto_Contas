@@ -2,7 +2,7 @@ using Contas_Db.Model;
 using Contas_Db.Repository;
 using Microsoft.EntityFrameworkCore;
 
-namespace Contas_Test
+namespace Contas_Test.Repository_Tests
 {
     [TestClass]
     public sealed class ContaRepositoryTests
