@@ -5,7 +5,7 @@ using Contas_Db.Repository;
 using Contas_Db.Repository.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace Contas_Test
+namespace Contas_Test.UseCase_Tests
 {
     [TestClass]
     public sealed class ContaUseCaseTests
@@ -103,7 +103,7 @@ namespace Contas_Test
             await _repository.AddAsync(contaInativa);
             var useCase = new ObterResumoContaUseCase(_repository);
 
-            var resultado = await useCase.ExecuteAsync();
+            var resultado = await useCase.ExecuteAsync(1);
 
             Assert.AreEqual(1, resultado.Count());
             var contaResumo = resultado.First();

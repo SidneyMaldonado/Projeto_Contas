@@ -1,3 +1,4 @@
+using Contas_Api.Extensions;
 using Contas_Core.Converters;
 using Contas_Core.Dto;
 using Contas_Core.UseCase.Divida;
@@ -35,7 +36,8 @@ public class DividasController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ObterTodos()
     {
-        var entidades = await _obterTodos.ExecuteAsync();
+        var usuarioId = User.GetUsuarioId();
+        var entidades = (await _obterTodos.ExecuteAsync()).Where(d => d.IdUsuario == usuarioId);
         return Ok(DividaConverter.ToDto(entidades));
     }
 
@@ -43,13 +45,17 @@ public class DividasController : ControllerBase
     public async Task<IActionResult> ObterPorId(int id)
     {
         var entidade = await _obterPorId.ExecuteAsync(id);
-        return entidade is null ? NotFound() : Ok(DividaConverter.ToDto(entidade));
+        if (entidade is null || entidade.IdUsuario != User.GetUsuarioId())
+            return NotFound();
+
+        return Ok(DividaConverter.ToDto(entidade));
     }
 
     [HttpPost]
     public async Task<IActionResult> Adicionar(AdicionarDividaDto dto)
     {
         var entidade = DividaConverter.ToEntity(dto);
+        entidade.IdUsuario = User.GetUsuarioId();
 
         try
         {
@@ -66,11 +72,13 @@ public class DividasController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Atualizar(int id, AtualizarDividaDto dto)
     {
+        var usuarioId = User.GetUsuarioId();
         var entidade = await _obterPorId.ExecuteAsync(id);
-        if (entidade is null)
+        if (entidade is null || entidade.IdUsuario != usuarioId)
             return NotFound();
 
         DividaConverter.ApplyUpdate(entidade, dto);
+        entidade.IdUsuario = usuarioId;
 
         try
         {
@@ -88,7 +96,7 @@ public class DividasController : ControllerBase
     public async Task<IActionResult> Excluir(int id)
     {
         var entidade = await _obterPorId.ExecuteAsync(id);
-        if (entidade is null)
+        if (entidade is null || entidade.IdUsuario != User.GetUsuarioId())
             return NotFound();
 
         await _excluir.ExecuteAsync(id);
@@ -99,7 +107,7 @@ public class DividasController : ControllerBase
     public async Task<IActionResult> Inativar(int id)
     {
         var entidade = await _obterPorId.ExecuteAsync(id);
-        if (entidade is null)
+        if (entidade is null || entidade.IdUsuario != User.GetUsuarioId())
             return NotFound();
 
         await _inativar.ExecuteAsync(id);

@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Contas_Db\Contas_Db.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.21.0" />
+  </ItemGroup>
+
 </Project>

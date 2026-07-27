@@ -8,9 +8,11 @@ namespace Contas_Db.Model;
 public class Conta : ISoftDelete
 {
     [Key]
+    [Column("id_conta")]
     public int Id { get; set; }
 
     [Required]
+    [Column("id_usuario")]
     public int IdUsuario { get; set; }
 
     [ForeignKey(nameof(IdUsuario))]
@@ -18,14 +20,17 @@ public class Conta : ISoftDelete
 
     [Required]
     [MaxLength(100)]
+    [Column("nm_conta")]
     public string Nome { get; set; } = string.Empty;
 
+    [Column("img_conta")]
     public byte[]? Imagem { get; set; }
 
     [Required]
-    [Column(TypeName = "numeric(10,2)")]
+    [Column("nr_saldo", TypeName = "numeric(10,2)")]
     public decimal Saldo { get; set; }
 
     [Required]
+    [Column("dm_ativo")]
     public bool Ativo { get; set; }
 }

@@ -1,6 +1,8 @@
 using Contas_Core.Converters;
 using Contas_Core.Dto;
+using Contas_Core.Security;
 using Contas_Core.UseCase.Usuario;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Contas_Api.Controllers;
@@ -14,6 +16,7 @@ public class UsuariosController : ControllerBase
     private readonly AtualizarUsuarioUseCase _atualizar;
     private readonly ExcluirUsuarioUseCase _excluir;
     private readonly InativarUsuarioUseCase _inativar;
+    private readonly JwtTokenGenerator _jwtTokenGenerator;
     private readonly LoginUsuarioUseCase _login;
     private readonly ObterPorIdUsuarioUseCase _obterPorId;
     private readonly ObterTodosUsuarioUseCase _obterTodos;
@@ -24,6 +27,7 @@ public class UsuariosController : ControllerBase
         AtualizarUsuarioUseCase atualizar,
         ExcluirUsuarioUseCase excluir,
         InativarUsuarioUseCase inativar,
+        JwtTokenGenerator jwtTokenGenerator,
         LoginUsuarioUseCase login,
         ObterPorIdUsuarioUseCase obterPorId,
         ObterTodosUsuarioUseCase obterTodos)
@@ -33,6 +37,7 @@ public class UsuariosController : ControllerBase
         _atualizar = atualizar;
         _excluir = excluir;
         _inativar = inativar;
+        _jwtTokenGenerator = jwtTokenGenerator;
         _login = login;
         _obterPorId = obterPorId;
         _obterTodos = obterTodos;
@@ -52,6 +57,7 @@ public class UsuariosController : ControllerBase
         return entidade is null ? NotFound() : Ok(UsuarioConverter.ToDto(entidade));
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Adicionar(AdicionarUsuarioDto dto)
     {
@@ -90,11 +96,16 @@ public class UsuariosController : ControllerBase
         return NoContent();
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginUsuarioDto dto)
     {
         var entidade = await _login.ExecuteAsync(dto.Email, dto.Senha);
-        return entidade is null ? Unauthorized() : Ok(UsuarioConverter.ToDto(entidade));
+        if (entidade is null)
+            return Unauthorized();
+
+        var token = _jwtTokenGenerator.GenerateToken(entidade.Id, entidade.Email);
+        return Ok(new LoginResponseDto { Token = token, Usuario = UsuarioConverter.ToDto(entidade) });
     }
 
     [HttpPatch("{id:int}/senha")]

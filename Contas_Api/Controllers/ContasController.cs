@@ -1,3 +1,4 @@
+using Contas_Api.Extensions;
 using Contas_Core.Converters;
 using Contas_Core.Dto;
 using Contas_Core.UseCase.Conta;
@@ -41,14 +42,15 @@ public class ContasController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ObterTodos()
     {
-        var entidades = await _obterTodos.ExecuteAsync();
+        var usuarioId = User.GetUsuarioId();
+        var entidades = (await _obterTodos.ExecuteAsync()).Where(c => c.IdUsuario == usuarioId);
         return Ok(ContaConverter.ToDto(entidades));
     }
 
     [HttpGet("resumo")]
     public async Task<IActionResult> ObterResumo()
     {
-        var resumo = await _obterResumo.ExecuteAsync();
+        var resumo = await _obterResumo.ExecuteAsync(User.GetUsuarioId());
         return Ok(resumo);
     }
 
@@ -56,13 +58,17 @@ public class ContasController : ControllerBase
     public async Task<IActionResult> ObterPorId(int id)
     {
         var entidade = await _obterPorId.ExecuteAsync(id);
-        return entidade is null ? NotFound() : Ok(ContaConverter.ToDto(entidade));
+        if (entidade is null || entidade.IdUsuario != User.GetUsuarioId())
+            return NotFound();
+
+        return Ok(ContaConverter.ToDto(entidade));
     }
 
     [HttpPost]
     public async Task<IActionResult> Adicionar(AdicionarContaDto dto)
     {
         var entidade = ContaConverter.ToEntity(dto);
+        entidade.IdUsuario = User.GetUsuarioId();
 
         try
         {
@@ -79,11 +85,13 @@ public class ContasController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Atualizar(int id, AtualizarContaDto dto)
     {
+        var usuarioId = User.GetUsuarioId();
         var entidade = await _obterPorId.ExecuteAsync(id);
-        if (entidade is null)
+        if (entidade is null || entidade.IdUsuario != usuarioId)
             return NotFound();
 
         ContaConverter.ApplyUpdate(entidade, dto);
+        entidade.IdUsuario = usuarioId;
 
         try
         {
@@ -100,7 +108,15 @@ public class ContasController : ControllerBase
     [HttpPut("saldos")]
     public async Task<IActionResult> AtualizarSaldos(IEnumerable<ContaResumoDto> saldos)
     {
-        await _atualizarSaldos.ExecuteAsync(saldos);
+        var usuarioId = User.GetUsuarioId();
+        var minhasContasIds = (await _obterTodos.ExecuteAsync())
+            .Where(c => c.IdUsuario == usuarioId)
+            .Select(c => c.Id)
+            .ToHashSet();
+
+        var saldosPermitidos = saldos.Where(s => minhasContasIds.Contains(s.Codigo));
+
+        await _atualizarSaldos.ExecuteAsync(saldosPermitidos);
         return NoContent();
     }
 
@@ -108,7 +124,7 @@ public class ContasController : ControllerBase
     public async Task<IActionResult> Excluir(int id)
     {
         var entidade = await _obterPorId.ExecuteAsync(id);
-        if (entidade is null)
+        if (entidade is null || entidade.IdUsuario != User.GetUsuarioId())
             return NotFound();
 
         await _excluir.ExecuteAsync(id);
@@ -119,7 +135,7 @@ public class ContasController : ControllerBase
     public async Task<IActionResult> Inativar(int id)
     {
         var entidade = await _obterPorId.ExecuteAsync(id);
-        if (entidade is null)
+        if (entidade is null || entidade.IdUsuario != User.GetUsuarioId())
             return NotFound();
 
         await _inativar.ExecuteAsync(id);

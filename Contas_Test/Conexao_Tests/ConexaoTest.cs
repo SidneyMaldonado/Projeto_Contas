@@ -1,6 +1,6 @@
 using Contas_Db.Model;
 
-namespace Contas_Test
+namespace Contas_Test.Conexao_Tests
 {
     [TestClass]
     public sealed class ConexaoTest

@@ -14,7 +14,6 @@ public static class PasswordHasher
         var hash = Rfc2898DeriveBytes.Pbkdf2(senha, salt, Iterations, HashAlgorithmName.SHA256, HashSize);
         return $"{Iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
     }
-
     public static bool Verify(string senha, string hashArmazenado)
     {
         var partes = hashArmazenado.Split('.', 3);

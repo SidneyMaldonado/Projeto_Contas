@@ -12,12 +12,12 @@ public class ObterResumoContaUseCase
         _repository = repository;
     }
 
-    public async Task<IEnumerable<ContaResumoDto>> ExecuteAsync()
+    public async Task<IEnumerable<ContaResumoDto>> ExecuteAsync(int idUsuario)
     {
         var contas = await _repository.GetAllAsync();
 
         return contas
-            .Where(c => c.Ativo)
+            .Where(c => c.Ativo && c.IdUsuario == idUsuario)
             .Select(c => new ContaResumoDto
             {
                 Codigo = c.Id,
