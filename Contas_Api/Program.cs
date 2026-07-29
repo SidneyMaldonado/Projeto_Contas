@@ -1,9 +1,13 @@
 using System.Text;
 using Contas_Core.Security;
+using Contas_Core.UseCase.Carteira;
 using Contas_Core.UseCase.Categoria;
 using Contas_Core.UseCase.Conta;
 using Contas_Core.UseCase.Credor;
 using Contas_Core.UseCase.Divida;
+using Contas_Core.UseCase.Historico;
+using Contas_Core.UseCase.Investimento;
+using Contas_Core.UseCase.Operacao;
 using Contas_Core.UseCase.Parcela;
 using Contas_Core.UseCase.Usuario;
 using Contas_Db.Model;
@@ -88,9 +92,20 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<ICarteiraRepository, CarteiraRepository>();
 builder.Services.AddScoped<IContaRepository, ContaRepository>();
+builder.Services.AddScoped<IHistoricoRepository, HistoricoRepository>();
+builder.Services.AddScoped<IInvestimentoRepository, InvestimentoRepository>();
+builder.Services.AddScoped<IOperacaoRepository, OperacaoRepository>();
 builder.Services.AddScoped<IParcelaRepository, ParcelaRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+
+builder.Services.AddScoped<AdicionarCarteiraUseCase>();
+builder.Services.AddScoped<AtualizarCarteiraUseCase>();
+builder.Services.AddScoped<ExcluirCarteiraUseCase>();
+builder.Services.AddScoped<InativarCarteiraUseCase>();
+builder.Services.AddScoped<ObterPorIdCarteiraUseCase>();
+builder.Services.AddScoped<ObterTodosCarteiraUseCase>();
 
 builder.Services.AddScoped<AdicionarCategoriaUseCase>();
 builder.Services.AddScoped<AtualizarCategoriaUseCase>();
@@ -121,6 +136,27 @@ builder.Services.AddScoped<ExcluirDividaUseCase>();
 builder.Services.AddScoped<InativarDividaUseCase>();
 builder.Services.AddScoped<ObterPorIdDividaUseCase>();
 builder.Services.AddScoped<ObterTodosDividaUseCase>();
+
+builder.Services.AddScoped<AdicionarHistoricoUseCase>();
+builder.Services.AddScoped<AtualizarHistoricoUseCase>();
+builder.Services.AddScoped<ExcluirHistoricoUseCase>();
+builder.Services.AddScoped<InativarHistoricoUseCase>();
+builder.Services.AddScoped<ObterPorIdHistoricoUseCase>();
+builder.Services.AddScoped<ObterTodosHistoricoUseCase>();
+
+builder.Services.AddScoped<AdicionarInvestimentoUseCase>();
+builder.Services.AddScoped<AtualizarInvestimentoUseCase>();
+builder.Services.AddScoped<ExcluirInvestimentoUseCase>();
+builder.Services.AddScoped<InativarInvestimentoUseCase>();
+builder.Services.AddScoped<ObterPorIdInvestimentoUseCase>();
+builder.Services.AddScoped<ObterTodosInvestimentoUseCase>();
+
+builder.Services.AddScoped<AdicionarOperacaoUseCase>();
+builder.Services.AddScoped<AtualizarOperacaoUseCase>();
+builder.Services.AddScoped<ExcluirOperacaoUseCase>();
+builder.Services.AddScoped<InativarOperacaoUseCase>();
+builder.Services.AddScoped<ObterPorIdOperacaoUseCase>();
+builder.Services.AddScoped<ObterTodosOperacaoUseCase>();
 
 builder.Services.AddScoped<AdicionarParcelaUseCase>();
 builder.Services.AddScoped<AtualizarParcelaUseCase>();
