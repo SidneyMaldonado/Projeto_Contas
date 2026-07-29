@@ -4,10 +4,14 @@ namespace Contas_Db.Model;
 
 public class ContasDbContext : DbContext
 {
+    public DbSet<Carteira> Carteiras { get; set; }
     public DbSet<Categoria> Categorias { get; set; }
     public DbSet<Conta> Contas { get; set; }
     public DbSet<Credor> Credores { get; set; }
     public DbSet<Divida> Dividas { get; set; }
+    public DbSet<Historico> Historicos { get; set; }
+    public DbSet<Investimento> Investimentos { get; set; }
+    public DbSet<Operacao> Operacoes { get; set; }
     public DbSet<Parcela> Parcelas { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
 
