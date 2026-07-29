@@ -159,7 +159,7 @@ namespace Contas_Test.Api_Tests
             var usuario = await SeedUsuarioAsync(email: "login@teste.com");
             var dto = new LoginUsuarioDto { Email = "login@teste.com", Senha = SenhaPadrao };
 
-            var response = await Client.PostAsJsonAsync("/api/usuarios/login", dto);
+            var response = await Client.PostAsJsonAsync("/api/auth/login", dto);
             response.EnsureSuccessStatusCode();
 
             var resultado = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
@@ -174,7 +174,7 @@ namespace Contas_Test.Api_Tests
             await SeedUsuarioAsync(email: "login2@teste.com");
             var dto = new LoginUsuarioDto { Email = "login2@teste.com", Senha = "SenhaErrada123" };
 
-            var response = await Client.PostAsJsonAsync("/api/usuarios/login", dto);
+            var response = await Client.PostAsJsonAsync("/api/auth/login", dto);
 
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -184,7 +184,7 @@ namespace Contas_Test.Api_Tests
         {
             var dto = new LoginUsuarioDto { Email = "naoexiste@teste.com", Senha = SenhaPadrao };
 
-            var response = await Client.PostAsJsonAsync("/api/usuarios/login", dto);
+            var response = await Client.PostAsJsonAsync("/api/auth/login", dto);
 
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -199,7 +199,7 @@ namespace Contas_Test.Api_Tests
 
             Assert.AreEqual(HttpStatusCode.NoContent, response.StatusCode);
 
-            var login = await Client.PostAsJsonAsync("/api/usuarios/login",
+            var login = await Client.PostAsJsonAsync("/api/auth/login",
                 new LoginUsuarioDto { Email = "senha@teste.com", Senha = "NovaSenha123" });
             Assert.AreEqual(HttpStatusCode.OK, login.StatusCode);
         }

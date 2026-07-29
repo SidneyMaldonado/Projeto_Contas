@@ -54,7 +54,7 @@ namespace Contas_Test.Api_Tests
                 Senha = "Senha123"
             });
 
-            var loginResponse = await client.PostAsJsonAsync("/api/usuarios/login", new LoginUsuarioDto
+            var loginResponse = await client.PostAsJsonAsync("/api/auth/login", new LoginUsuarioDto
             {
                 Email = email,
                 Senha = "Senha123"
