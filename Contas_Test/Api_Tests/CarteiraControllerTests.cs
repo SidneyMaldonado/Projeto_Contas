@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Test.Api_Tests
@@ -11,7 +11,7 @@ namespace Contas_Test.Api_Tests
     public class CarteiraControllerTests : ApiTestBase
     {
         private Task<Usuario> SeedOutroUsuarioAsync() =>
-            SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
+            SeedAsync(new Usuario { Nome = "Outro UsuÃ¡rio", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
         private Task<Carteira> SeedCarteiraAsync(int idUsuario, string nome = "Carteira Renda Fixa", bool ativo = true) =>
             SeedAsync(new Carteira
@@ -51,7 +51,7 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task ObterPorId_DeveRetornarCarteira_QuandoExistir()
         {
-            var carteira = await SeedCarteiraAsync(CurrentUser.Id, "Carteira Ações");
+            var carteira = await SeedCarteiraAsync(CurrentUser.Id, "Carteira AÃ§Ãµes");
 
             var response = await Client.GetAsync($"/api/carteiras/{carteira.Id}");
             response.EnsureSuccessStatusCode();
@@ -60,7 +60,7 @@ namespace Contas_Test.Api_Tests
 
             Assert.IsNotNull(dto);
             Assert.AreEqual(carteira.Id, dto!.Id);
-            Assert.AreEqual("Carteira Ações", dto.Nome);
+            Assert.AreEqual("Carteira AÃ§Ãµes", dto.Nome);
         }
 
         [TestMethod]
@@ -101,7 +101,7 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task Adicionar_DeveAssociarCarteiraAoUsuarioAutenticado()
         {
-            var dto = new AdicionarCarteiraDto { Nome = "Carteira do Usuário Atual" };
+            var dto = new AdicionarCarteiraDto { Nome = "Carteira do UsuÃ¡rio Atual" };
 
             var response = await Client.PostAsJsonAsync("/api/carteiras", dto);
             Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
@@ -162,7 +162,7 @@ namespace Contas_Test.Api_Tests
             var outroUsuario = await SeedOutroUsuarioAsync();
             var carteiraAlheia = await SeedCarteiraAsync(outroUsuario.Id);
 
-            var dto = new AtualizarCarteiraDto { Nome = "Invasão" };
+            var dto = new AtualizarCarteiraDto { Nome = "InvasÃ£o" };
 
             var response = await Client.PutAsJsonAsync($"/api/carteiras/{carteiraAlheia.Id}", dto);
 

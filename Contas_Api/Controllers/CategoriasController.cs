@@ -1,5 +1,5 @@
-using Contas_Core.Converters;
-using Contas_Core.Dto;
+﻿using Contas_Core.Converters;
+using Contas_Contratos.Dto;
 using Contas_Core.UseCase.Categoria;
 using Microsoft.AspNetCore.Mvc;
 

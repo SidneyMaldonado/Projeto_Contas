@@ -1,6 +1,6 @@
-using Contas_Api.Extensions;
+﻿using Contas_Api.Extensions;
 using Contas_Core.Converters;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Core.UseCase.Divida;
 using Microsoft.AspNetCore.Mvc;
 

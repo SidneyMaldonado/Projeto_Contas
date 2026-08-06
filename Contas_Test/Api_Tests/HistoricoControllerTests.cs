@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Test.Api_Tests
@@ -11,12 +11,12 @@ namespace Contas_Test.Api_Tests
     public class HistoricoControllerTests : ApiTestBase
     {
         private Task<Usuario> SeedOutroUsuarioAsync() =>
-            SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
+            SeedAsync(new Usuario { Nome = "Outro UsuÃ¡rio", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
         private Task<Carteira> SeedCarteiraAsync(int idUsuario, string nome = "Carteira Principal") =>
             SeedAsync(new Carteira { IdUsuario = idUsuario, Nome = nome, Ativo = true });
 
-        private Task<Investimento> SeedInvestimentoAsync(int idCarteira, string nome = "Ação XYZ") =>
+        private Task<Investimento> SeedInvestimentoAsync(int idCarteira, string nome = "AÃ§Ã£o XYZ") =>
             SeedAsync(new Investimento
             {
                 IdCarteira = idCarteira,
@@ -37,7 +37,7 @@ namespace Contas_Test.Api_Tests
 
         private Task<Historico> SeedHistoricoAsync(
             int idInvestimento,
-            string nomeInvestimento = "Ação XYZ",
+            string nomeInvestimento = "AÃ§Ã£o XYZ",
             decimal quantidade = 10m,
             decimal cotacao = 25.50m,
             string observacao = "Snapshot de teste",
@@ -133,7 +133,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarHistoricoDto
             {
                 IdInvestimento = investimento.Id,
-                NomeInvestimento = "Ação XYZ",
+                NomeInvestimento = "AÃ§Ã£o XYZ",
                 Quantidade = 15m,
                 Cotacao = 30m,
                 Observacao = "Compra adicional"
@@ -145,7 +145,7 @@ namespace Contas_Test.Api_Tests
 
             var criado = await response.Content.ReadFromJsonAsync<HistoricoDto>();
             Assert.IsNotNull(criado);
-            Assert.AreEqual("Ação XYZ", criado!.NomeInvestimento);
+            Assert.AreEqual("AÃ§Ã£o XYZ", criado!.NomeInvestimento);
             Assert.AreNotEqual(0, criado.Id);
             Assert.IsTrue(criado.Ativo);
             Assert.AreNotEqual(default, criado.DataHistorico);
@@ -160,10 +160,10 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarHistoricoDto
             {
                 IdInvestimento = investimentoAlheio.Id,
-                NomeInvestimento = "Tentativa de Invasão",
+                NomeInvestimento = "Tentativa de InvasÃ£o",
                 Quantidade = 1m,
                 Cotacao = 1m,
-                Observacao = "Invasão"
+                Observacao = "InvasÃ£o"
             };
 
             var response = await Client.PostAsJsonAsync("/api/historicos", dto);
@@ -179,7 +179,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarHistoricoDto
             {
                 IdInvestimento = investimento.Id,
-                NomeInvestimento = "Ação XYZ",
+                NomeInvestimento = "AÃ§Ã£o XYZ",
                 Quantidade = 15m,
                 Cotacao = 30m,
                 Observacao = ""
@@ -198,10 +198,10 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarHistoricoDto
             {
                 IdInvestimento = investimento.Id,
-                NomeInvestimento = "Ação XYZ",
+                NomeInvestimento = "AÃ§Ã£o XYZ",
                 Quantidade = -1m,
                 Cotacao = 30m,
-                Observacao = "Observação válida"
+                Observacao = "ObservaÃ§Ã£o vÃ¡lida"
             };
 
             var response = await Client.PostAsJsonAsync("/api/historicos", dto);
@@ -213,7 +213,7 @@ namespace Contas_Test.Api_Tests
         public async Task Atualizar_DeveAtualizarHistorico_QuandoExistir()
         {
             var (_, investimento) = await SeedDependenciasAsync(CurrentUser.Id);
-            var historico = await SeedHistoricoAsync(investimento.Id, "Nome Antigo", 10m, 20m, "Observação antiga");
+            var historico = await SeedHistoricoAsync(investimento.Id, "Nome Antigo", 10m, 20m, "ObservaÃ§Ã£o antiga");
 
             var dto = new AtualizarHistoricoDto
             {
@@ -221,7 +221,7 @@ namespace Contas_Test.Api_Tests
                 NomeInvestimento = "Nome Novo",
                 Quantidade = 50m,
                 Cotacao = 35m,
-                Observacao = "Observação nova"
+                Observacao = "ObservaÃ§Ã£o nova"
             };
 
             var response = await Client.PutAsJsonAsync($"/api/historicos/{historico.Id}", dto);
@@ -233,7 +233,7 @@ namespace Contas_Test.Api_Tests
             Assert.AreEqual("Nome Novo", atualizado!.NomeInvestimento);
             Assert.AreEqual(50m, atualizado.Quantidade);
             Assert.AreEqual(35m, atualizado.Cotacao);
-            Assert.AreEqual("Observação nova", atualizado.Observacao);
+            Assert.AreEqual("ObservaÃ§Ã£o nova", atualizado.Observacao);
         }
 
         [TestMethod]
@@ -265,10 +265,10 @@ namespace Contas_Test.Api_Tests
             var dto = new AtualizarHistoricoDto
             {
                 IdInvestimento = investimentoAlheio.Id,
-                NomeInvestimento = "Invasão",
+                NomeInvestimento = "InvasÃ£o",
                 Quantidade = 1m,
                 Cotacao = 1m,
-                Observacao = "Invasão"
+                Observacao = "InvasÃ£o"
             };
 
             var response = await Client.PutAsJsonAsync($"/api/historicos/{historicoAlheio.Id}", dto);
@@ -357,10 +357,10 @@ namespace Contas_Test.Api_Tests
             var putResponse = await Client.PutAsJsonAsync($"/api/historicos/{historicoAlheio.Id}", new AtualizarHistoricoDto
             {
                 IdInvestimento = investimentoAlheio.Id,
-                NomeInvestimento = "Invasão",
+                NomeInvestimento = "InvasÃ£o",
                 Quantidade = 1m,
                 Cotacao = 1m,
-                Observacao = "Invasão"
+                Observacao = "InvasÃ£o"
             });
             Assert.AreEqual(HttpStatusCode.NotFound, putResponse.StatusCode);
 

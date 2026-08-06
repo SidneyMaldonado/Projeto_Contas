@@ -1,4 +1,4 @@
-using Contas_Core.Dto;
+﻿using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Core.Converters;

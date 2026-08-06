@@ -1,4 +1,4 @@
-using Contas_Core.Dto;
+﻿using Contas_Contratos.Dto;
 using Contas_Core.UseCase.Conta;
 using Contas_Db.Model;
 using Contas_Db.Repository;
@@ -72,14 +72,14 @@ namespace Contas_Test.UseCase_Tests
         [TestMethod]
         public async Task ObterPorIdContaUseCase_DeveRetornarContaExistente()
         {
-            var conta = CriarConta("Conta Poupança");
+            var conta = CriarConta("Conta PoupanÃ§a");
             await _repository.AddAsync(conta);
             var useCase = new ObterPorIdContaUseCase(_repository);
 
             var resultado = await useCase.ExecuteAsync(conta.Id);
 
             Assert.IsNotNull(resultado);
-            Assert.AreEqual("Conta Poupança", resultado!.Nome);
+            Assert.AreEqual("Conta PoupanÃ§a", resultado!.Nome);
         }
 
         [TestMethod]

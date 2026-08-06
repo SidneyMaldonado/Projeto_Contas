@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Test.Api_Tests
@@ -11,7 +11,7 @@ namespace Contas_Test.Api_Tests
     public class InvestimentoControllerTests : ApiTestBase
     {
         private Task<Usuario> SeedOutroUsuarioAsync() =>
-            SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
+            SeedAsync(new Usuario { Nome = "Outro UsuÃ¡rio", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
         private Task<Carteira> SeedCarteiraAsync(int idUsuario) =>
             SeedAsync(new Carteira { IdUsuario = idUsuario, Nome = "Carteira Renda Fixa", Ativo = true });
@@ -70,7 +70,7 @@ namespace Contas_Test.Api_Tests
         public async Task ObterPorId_DeveRetornarInvestimento_QuandoExistir()
         {
             var carteira = await SeedCarteiraAsync(CurrentUser.Id);
-            var investimento = await SeedInvestimentoAsync(carteira.Id, "Ação XPTO", 15m, 50m);
+            var investimento = await SeedInvestimentoAsync(carteira.Id, "AÃ§Ã£o XPTO", 15m, 50m);
 
             var response = await Client.GetAsync($"/api/investimentos/{investimento.Id}");
             response.EnsureSuccessStatusCode();
@@ -79,7 +79,7 @@ namespace Contas_Test.Api_Tests
 
             Assert.IsNotNull(dto);
             Assert.AreEqual(investimento.Id, dto!.Id);
-            Assert.AreEqual("Ação XPTO", dto.Nome);
+            Assert.AreEqual("AÃ§Ã£o XPTO", dto.Nome);
             Assert.AreEqual(15m, dto.Quantidade);
             Assert.AreEqual(50m, dto.Cotacao);
         }
@@ -112,7 +112,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarInvestimentoDto
             {
                 IdCarteira = carteira.Id,
-                Nome = "Fundo Imobiliário",
+                Nome = "Fundo ImobiliÃ¡rio",
                 Quantidade = 30m,
                 Cotacao = 120m,
                 Observacao = "Compra mensal"
@@ -124,7 +124,7 @@ namespace Contas_Test.Api_Tests
 
             var criado = await response.Content.ReadFromJsonAsync<InvestimentoDto>();
             Assert.IsNotNull(criado);
-            Assert.AreEqual("Fundo Imobiliário", criado!.Nome);
+            Assert.AreEqual("Fundo ImobiliÃ¡rio", criado!.Nome);
             Assert.AreNotEqual(0, criado.Id);
             Assert.IsTrue(criado.Ativo);
         }
@@ -138,7 +138,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarInvestimentoDto
             {
                 IdCarteira = carteiraAlheia.Id,
-                Nome = "Tentativa de Invasão",
+                Nome = "Tentativa de InvasÃ£o",
                 Quantidade = 10m,
                 Cotacao = 10m
             };
@@ -156,7 +156,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarInvestimentoDto
             {
                 IdCarteira = carteira.Id,
-                Nome = "Investimento Inválido",
+                Nome = "Investimento InvÃ¡lido",
                 Quantidade = 0m,
                 Cotacao = 10m
             };
@@ -219,7 +219,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AtualizarInvestimentoDto
             {
                 IdCarteira = carteiraAlheia.Id,
-                Nome = "Invasão",
+                Nome = "InvasÃ£o",
                 Quantidade = 10m,
                 Cotacao = 10m
             };

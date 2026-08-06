@@ -1,4 +1,4 @@
-using Contas_Core.Dto;
+﻿using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Core.Converters;
@@ -18,7 +18,7 @@ public static class HistoricoConverter
 
     public static void ApplyUpdate(Historico entity, AtualizarHistoricoDto dto)
     {
-        // DataHistorico não é alterada: é um registro de auditoria imutável.
+        // DataHistorico nÃ£o Ã© alterada: Ã© um registro de auditoria imutÃ¡vel.
         entity.IdInvestimento = dto.IdInvestimento;
         entity.NomeInvestimento = dto.NomeInvestimento;
         entity.Quantidade = dto.Quantidade;

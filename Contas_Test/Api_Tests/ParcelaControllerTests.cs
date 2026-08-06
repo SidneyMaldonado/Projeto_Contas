@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Test.Api_Tests
@@ -11,10 +11,10 @@ namespace Contas_Test.Api_Tests
     public class ParcelaControllerTests : ApiTestBase
     {
         private Task<Usuario> SeedOutroUsuarioAsync() =>
-            SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
+            SeedAsync(new Usuario { Nome = "Outro UsuÃ¡rio", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
         private Task<Categoria> SeedCategoriaAsync() =>
-            SeedAsync(new Categoria { Nome = "Alimentação", Ativo = true });
+            SeedAsync(new Categoria { Nome = "AlimentaÃ§Ã£o", Ativo = true });
 
         private Task<Conta> SeedContaAsync(int idUsuario) =>
             SeedAsync(new Conta { IdUsuario = idUsuario, Nome = "Conta Corrente", Saldo = 1000m, Ativo = true });
@@ -169,7 +169,7 @@ namespace Contas_Test.Api_Tests
                 IdDivida = dividaAlheia.Id,
                 IdCategoria = categoria.Id,
                 IdConta = contaAlheia.Id,
-                Descricao = "Tentativa de Invasão",
+                Descricao = "Tentativa de InvasÃ£o",
                 Valor = 100m,
                 DataVencimento = DateTime.Today.AddMonths(1)
             };
@@ -189,7 +189,7 @@ namespace Contas_Test.Api_Tests
                 IdDivida = divida.Id,
                 IdCategoria = categoria.Id,
                 IdConta = conta.Id,
-                Descricao = "Parcela Inválida",
+                Descricao = "Parcela InvÃ¡lida",
                 Valor = 0m,
                 DataVencimento = DateTime.Today.AddMonths(1)
             };
@@ -257,7 +257,7 @@ namespace Contas_Test.Api_Tests
                 IdDivida = divida.Id,
                 IdCategoria = categoria.Id,
                 IdConta = conta.Id,
-                Descricao = "Invasão",
+                Descricao = "InvasÃ£o",
                 Valor = 100m,
                 DataVencimento = DateTime.Today.AddMonths(1)
             };

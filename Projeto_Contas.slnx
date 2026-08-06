@@ -3,7 +3,9 @@
   <Project Path="Contas_App/Contas_App.csproj">
     <Deploy Solution="Debug|*" />
   </Project>
+  <Project Path="Contas_Contratos/Contas_Contratos.csproj" />
   <Project Path="Contas_Core/Contas_Core.csproj" />
   <Project Path="Contas_Db/Contas_Db.csproj" />
   <Project Path="Contas_Test/Contas_Test.csproj" Id="536acd50-5f72-4e79-a136-6ba20d31c355" />
+  <Project Path="Contas_Web/Contas_Web.csproj" Id="a9e1baf5-5b92-43a9-8391-6221e78cf2cf" />
 </Solution>

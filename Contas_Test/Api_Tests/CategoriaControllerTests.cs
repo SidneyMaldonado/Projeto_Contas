@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Test.Api_Tests
@@ -10,7 +10,7 @@ namespace Contas_Test.Api_Tests
     [TestClass]
     public class CategoriaControllerTests : ApiTestBase
     {
-        private Task<Categoria> SeedCategoriaAsync(string nome = "Alimentação", bool ativo = true) =>
+        private Task<Categoria> SeedCategoriaAsync(string nome = "AlimentaÃ§Ã£o", bool ativo = true) =>
             SeedAsync(new Categoria { Nome = nome, Ativo = ativo });
 
         [TestMethod]

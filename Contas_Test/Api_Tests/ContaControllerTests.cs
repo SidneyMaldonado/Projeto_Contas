@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Test.Api_Tests
@@ -11,7 +11,7 @@ namespace Contas_Test.Api_Tests
     public class ContaControllerTests : ApiTestBase
     {
         private Task<Usuario> SeedOutroUsuarioAsync() =>
-            SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
+            SeedAsync(new Usuario { Nome = "Outro UsuÃ¡rio", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
         private Task<Conta> SeedContaAsync(int idUsuario, string nome = "Conta Corrente", decimal saldo = 100m, bool ativo = true) =>
             SeedAsync(new Conta { IdUsuario = idUsuario, Nome = nome, Saldo = saldo, Ativo = ativo });
@@ -48,7 +48,7 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task ObterPorId_DeveRetornarConta_QuandoExistir()
         {
-            var conta = await SeedContaAsync(CurrentUser.Id, "Poupança", 500m);
+            var conta = await SeedContaAsync(CurrentUser.Id, "PoupanÃ§a", 500m);
 
             var response = await Client.GetAsync($"/api/contas/{conta.Id}");
             response.EnsureSuccessStatusCode();
@@ -57,7 +57,7 @@ namespace Contas_Test.Api_Tests
 
             Assert.IsNotNull(dto);
             Assert.AreEqual(conta.Id, dto!.Id);
-            Assert.AreEqual("Poupança", dto.Nome);
+            Assert.AreEqual("PoupanÃ§a", dto.Nome);
             Assert.AreEqual(500m, dto.Saldo);
         }
 
@@ -113,7 +113,7 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task Adicionar_DeveRetornarBadRequest_QuandoSaldoNegativo()
         {
-            var dto = new AdicionarContaDto { IdUsuario = CurrentUser.Id, Nome = "Conta Inválida", Saldo = -10m };
+            var dto = new AdicionarContaDto { IdUsuario = CurrentUser.Id, Nome = "Conta InvÃ¡lida", Saldo = -10m };
 
             var response = await Client.PostAsJsonAsync("/api/contas", dto);
 
@@ -151,7 +151,7 @@ namespace Contas_Test.Api_Tests
         {
             var outroUsuario = await SeedOutroUsuarioAsync();
             var contaAlheia = await SeedContaAsync(outroUsuario.Id);
-            var dto = new AtualizarContaDto { IdUsuario = outroUsuario.Id, Nome = "Invasão", Saldo = 0m };
+            var dto = new AtualizarContaDto { IdUsuario = outroUsuario.Id, Nome = "InvasÃ£o", Saldo = 0m };
 
             var response = await Client.PutAsJsonAsync($"/api/contas/{contaAlheia.Id}", dto);
 

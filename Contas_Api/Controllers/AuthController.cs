@@ -1,5 +1,5 @@
 ﻿using Contas_Core.Converters;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Core.Security;
 using Contas_Core.UseCase.Usuario;
 using Microsoft.AspNetCore.Authorization;

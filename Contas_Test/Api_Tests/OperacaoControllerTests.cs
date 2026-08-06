@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Contas_Core.Dto;
+using Contas_Contratos.Dto;
 using Contas_Db.Model;
 
 namespace Contas_Test.Api_Tests
@@ -11,7 +11,7 @@ namespace Contas_Test.Api_Tests
     public class OperacaoControllerTests : ApiTestBase
     {
         private Task<Usuario> SeedOutroUsuarioAsync() =>
-            SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
+            SeedAsync(new Usuario { Nome = "Outro UsuÃ¡rio", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
         private Task<Carteira> SeedCarteiraAsync(int idUsuario) =>
             SeedAsync(new Carteira { IdUsuario = idUsuario, Nome = "Carteira Principal", Ativo = true });
@@ -20,7 +20,7 @@ namespace Contas_Test.Api_Tests
             SeedAsync(new Investimento
             {
                 IdCarteira = idCarteira,
-                Nome = "Ação XYZ",
+                Nome = "AÃ§Ã£o XYZ",
                 Quantidade = 100m,
                 Cotacao = 25m,
                 Ativo = true
@@ -313,12 +313,12 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task ObterPorId_DeveRetornarNotFound_QuandoUsuarioATentaAcessarOperacaoDeUsuarioB()
         {
-            // Teste de isolamento em dois níveis: Operacao -> Investimento -> Carteira -> Usuario.
+            // Teste de isolamento em dois nÃ­veis: Operacao -> Investimento -> Carteira -> Usuario.
             var usuarioB = await SeedOutroUsuarioAsync();
             var investimentoDoB = await SeedDependenciasAsync(usuarioB.Id);
             var operacaoDoB = await SeedOperacaoAsync(investimentoDoB.Id, quantidade: 99, valor: 999m);
 
-            // Client autenticado é o usuário A (CurrentUser).
+            // Client autenticado Ã© o usuÃ¡rio A (CurrentUser).
             var response = await Client.GetAsync($"/api/operacoes/{operacaoDoB.Id}");
 
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);

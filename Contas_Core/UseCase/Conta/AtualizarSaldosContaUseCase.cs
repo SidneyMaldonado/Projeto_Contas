@@ -1,4 +1,4 @@
-using Contas_Core.Dto;
+﻿using Contas_Contratos.Dto;
 using Contas_Db.Repository.Interface;
 
 namespace Contas_Core.UseCase.Conta;
