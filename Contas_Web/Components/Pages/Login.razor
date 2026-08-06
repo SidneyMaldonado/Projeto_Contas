@@ -1,0 +1,70 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+@using Contas_Contratos.Dto
+@using Contas_Web.Services
+@inject AuthApiService AuthApi
+@inject AuthSession AuthSession
+@inject NavigationManager NavigationManager
+
+<PageTitle>Login</PageTitle>
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card p-4 shadow-sm" style="width: 100%; max-width: 400px;">
+        <h1 class="h4 mb-3 text-center">Entrar</h1>
+
+        <EditForm Model="_model" OnValidSubmit="HandleLoginAsync">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@_errorMessage</div>
+            }
+
+            <div class="mb-3">
+                <label for="email" class="form-label">E-mail</label>
+                <InputText id="email" class="form-control" @bind-Value="_model.Email" />
+                <ValidationMessage For="() => _model.Email" />
+            </div>
+
+            <div class="mb-3">
+                <label for="senha" class="form-label">Senha</label>
+                <input id="senha" type="password" class="form-control"
+                       value="@_model.Senha"
+                       @oninput="OnSenhaChanged" />
+                <ValidationMessage For="() => _model.Senha" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" disabled="@_isBusy">
+                @(_isBusy ? "Entrando..." : "Entrar")
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private readonly LoginUsuarioDto _model = new();
+    private string? _errorMessage;
+    private bool _isBusy;
+
+    private void OnSenhaChanged(ChangeEventArgs e)
+        => _model.Senha = e.Value?.ToString() ?? string.Empty;
+
+    private async Task HandleLoginAsync()
+    {
+        _errorMessage = null;
+        _isBusy = true;
+
+        var result = await AuthApi.LoginAsync(_model);
+
+        _isBusy = false;
+
+        if (!result.Success || result.Response is null)
+        {
+            _errorMessage = result.ErrorMessage;
+            return;
+        }
+
+        await AuthSession.SignInAsync(result.Response.Token, result.Response.Usuario);
+        NavigationManager.NavigateTo("/");
+    }
+}

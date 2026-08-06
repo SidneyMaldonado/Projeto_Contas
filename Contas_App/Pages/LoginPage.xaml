@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Contas_App.Pages.LoginPage"
+             BackgroundImageSource="fundo.png"
+             Shell.NavBarIsVisible="False"
+             Shell.FlyoutBehavior="Disabled">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="24">
+
+        <Label Grid.Row="0"
+               Text="Vida dura"
+               FontSize="34"
+               FontAttributes="Bold"
+               TextColor="{StaticResource Gold}"
+               HorizontalOptions="Center"
+               Margin="0,60,0,0" />
+
+        <VerticalStackLayout Grid.Row="1" VerticalOptions="Center" Spacing="16">
+
+            <Border Stroke="{StaticResource Gold}"
+                    StrokeThickness="2"
+                    StrokeShape="RoundRectangle 20"
+                    BackgroundColor="#B3000000"
+                    Padding="20">
+
+                <VerticalStackLayout Spacing="4">
+
+                    <Label Text="E-mail"
+                           TextColor="{StaticResource Gold}"
+                           FontAttributes="Bold"
+                           FontSize="13" />
+                    <Entry x:Name="EmailEntry"
+                           TextColor="White"
+                           Keyboard="Email" />
+                    <Label x:Name="EmailErrorLabel"
+                           TextColor="OrangeRed"
+                           FontSize="12"
+                           IsVisible="False" />
+
+                    <Label Text="Senha"
+                           TextColor="{StaticResource Gold}"
+                           FontAttributes="Bold"
+                           FontSize="13"
+                           Margin="0,10,0,0" />
+                    <Entry x:Name="SenhaEntry"
+                           TextColor="White"
+                           IsPassword="True" />
+                    <Label x:Name="SenhaErrorLabel"
+                           TextColor="OrangeRed"
+                           FontSize="12"
+                           IsVisible="False" />
+
+                    <Button x:Name="AcessarButton"
+                            Text="Acessar"
+                            BackgroundColor="{StaticResource Gold}"
+                            TextColor="Black"
+                            FontAttributes="Bold"
+                            Margin="0,10,0,0"
+                            Clicked="OnAcessarClicked" />
+
+                    <ActivityIndicator x:Name="LoadingIndicator"
+                                       IsVisible="False"
+                                       IsRunning="False"
+                                       Color="{StaticResource Gold}" />
+
+                    <Label x:Name="StatusLabel"
+                           TextColor="OrangeRed"
+                           HorizontalTextAlignment="Center"
+                           IsVisible="False" />
+
+                </VerticalStackLayout>
+            </Border>
+
+            <Label HorizontalOptions="Center" FontSize="14">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="É novo por aqui? " TextColor="White" />
+                        <Span Text="Registrar-se" TextColor="{StaticResource Gold}" TextDecorations="Underline">
+                            <Span.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnRegistrarSeTapped" />
+                            </Span.GestureRecognizers>
+                        </Span>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+
+            <Label Text="Esqueci minha senha"
+                   TextColor="{StaticResource Gold}"
+                   TextDecorations="Underline"
+                   FontSize="14"
+                   HorizontalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnEsqueciSenhaTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+
+        </VerticalStackLayout>
+
+        <Button Grid.Row="2"
+                x:Name="BiometriaButton"
+                Text="Entrar com biometria"
+                BackgroundColor="Transparent"
+                TextColor="{StaticResource Gold}"
+                IsVisible="False"
+                Clicked="OnBiometriaClicked"
+                Margin="0,0,0,30" />
+
+    </Grid>
+</ContentPage>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Contas_App.Pages.RegisterPage"
+             BackgroundImageSource="fundo.png"
+             Shell.NavBarIsVisible="False"
+             Shell.FlyoutBehavior="Disabled">
+
+    <Grid RowDefinitions="Auto,*" Padding="24">
+
+        <VerticalStackLayout Grid.Row="0" Margin="0,60,0,0" Spacing="2">
+            <Label Text="Vida dura"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource Gold}"
+                   HorizontalOptions="Center" />
+            <Label Text="Criar conta"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource Gold}"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="1" VerticalOptions="Center" Spacing="16">
+
+            <Border Stroke="{StaticResource Gold}"
+                    StrokeThickness="2"
+                    StrokeShape="RoundRectangle 20"
+                    BackgroundColor="#B3000000"
+                    Padding="20">
+
+                <VerticalStackLayout Spacing="4">
+
+                    <Label Text="Nome"
+                           TextColor="{StaticResource Gold}"
+                           FontAttributes="Bold"
+                           FontSize="13" />
+                    <Entry x:Name="NomeEntry"
+                           TextColor="White" />
+                    <Label x:Name="NomeErrorLabel"
+                           TextColor="OrangeRed"
+                           FontSize="12"
+                           IsVisible="False" />
+
+                    <Label Text="E-mail"
+                           TextColor="{StaticResource Gold}"
+                           FontAttributes="Bold"
+                           FontSize="13"
+                           Margin="0,10,0,0" />
+                    <Entry x:Name="EmailEntry"
+                           TextColor="White"
+                           Keyboard="Email" />
+                    <Label x:Name="EmailErrorLabel"
+                           TextColor="OrangeRed"
+                           FontSize="12"
+                           IsVisible="False" />
+
+                    <Label Text="Senha"
+                           TextColor="{StaticResource Gold}"
+                           FontAttributes="Bold"
+                           FontSize="13"
+                           Margin="0,10,0,0" />
+                    <Entry x:Name="SenhaEntry"
+                           TextColor="White"
+                           IsPassword="True" />
+                    <Label x:Name="SenhaErrorLabel"
+                           TextColor="OrangeRed"
+                           FontSize="12"
+                           IsVisible="False" />
+
+                    <Label Text="Confirmar senha"
+                           TextColor="{StaticResource Gold}"
+                           FontAttributes="Bold"
+                           FontSize="13"
+                           Margin="0,10,0,0" />
+                    <Entry x:Name="ConfirmarSenhaEntry"
+                           TextColor="White"
+                           IsPassword="True" />
+                    <Label x:Name="ConfirmarSenhaErrorLabel"
+                           TextColor="OrangeRed"
+                           FontSize="12"
+                           IsVisible="False" />
+
+                    <Button x:Name="CadastrarButton"
+                            Text="Cadastrar"
+                            BackgroundColor="{StaticResource Gold}"
+                            TextColor="Black"
+                            FontAttributes="Bold"
+                            Margin="0,10,0,0"
+                            Clicked="OnCadastrarClicked" />
+
+                    <ActivityIndicator x:Name="LoadingIndicator"
+                                       IsVisible="False"
+                                       IsRunning="False"
+                                       Color="{StaticResource Gold}" />
+
+                    <Label x:Name="StatusLabel"
+                           TextColor="OrangeRed"
+                           HorizontalTextAlignment="Center"
+                           IsVisible="False" />
+
+                </VerticalStackLayout>
+            </Border>
+
+            <Label HorizontalOptions="Center" FontSize="14">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Já tem conta? " TextColor="White" />
+                        <Span Text="Entrar" TextColor="{StaticResource Gold}" TextDecorations="Underline">
+                            <Span.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnEntrarTapped" />
+                            </Span.GestureRecognizers>
+                        </Span>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>

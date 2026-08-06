@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Contas_App.Pages;
+using Contas_App.Services;
+using Microsoft.Extensions.Logging;
+using Plugin.Fingerprint;
+using Plugin.Fingerprint.Abstractions;
 
 namespace Contas_App
 {
@@ -18,6 +22,11 @@ namespace Contas_App
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+
+            builder.Services.AddSingleton<IFingerprint>(_ => CrossFingerprint.Current);
+            builder.Services.AddSingleton<AuthApiService>();
+            builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<RegisterPage>();
 
             return builder.Build();
         }
