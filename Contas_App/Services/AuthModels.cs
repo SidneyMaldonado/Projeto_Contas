@@ -1,20 +1,15 @@
-namespace Contas_App.Services;
+using Contas_Contratos.Dto;
 
-public class UsuarioInfo
-{
-    public int Id { get; set; }
-    public string Nome { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-}
+namespace Contas_App.Services;
 
 public class LoginResult
 {
     public bool Success { get; private init; }
     public string? Token { get; private init; }
-    public UsuarioInfo? Usuario { get; private init; }
+    public UsuarioDto? Usuario { get; private init; }
     public string? ErrorMessage { get; private init; }
 
-    public static LoginResult Ok(string token, UsuarioInfo usuario) =>
+    public static LoginResult Ok(string token, UsuarioDto usuario) =>
         new() { Success = true, Token = token, Usuario = usuario };
 
     public static LoginResult Fail(string message) =>
@@ -24,10 +19,10 @@ public class LoginResult
 public class RegisterResult
 {
     public bool Success { get; private init; }
-    public UsuarioInfo? Usuario { get; private init; }
+    public UsuarioDto? Usuario { get; private init; }
     public string? ErrorMessage { get; private init; }
 
-    public static RegisterResult Ok(UsuarioInfo usuario) =>
+    public static RegisterResult Ok(UsuarioDto usuario) =>
         new() { Success = true, Usuario = usuario };
 
     public static RegisterResult Fail(string message) =>
