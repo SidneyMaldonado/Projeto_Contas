@@ -30,7 +30,7 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task ObterPorId_DeveRetornarCredor_QuandoExistir()
         {
-            var credor = await SeedCredorAsync("CartÃ£o ABC");
+            var credor = await SeedCredorAsync("Cartão ABC");
 
             var response = await Client.GetAsync($"/api/credores/{credor.Id}");
             response.EnsureSuccessStatusCode();
@@ -39,7 +39,7 @@ namespace Contas_Test.Api_Tests
 
             Assert.IsNotNull(dto);
             Assert.AreEqual(credor.Id, dto!.Id);
-            Assert.AreEqual("CartÃ£o ABC", dto.Nome);
+            Assert.AreEqual("Cartão ABC", dto.Nome);
         }
 
         [TestMethod]
@@ -53,7 +53,7 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task Adicionar_DeveCriarCredor_QuandoValido()
         {
-            var dto = new AdicionarCredorDto { Nome = "Financeira XPTO", Observacoes = "CartÃ£o de crÃ©dito" };
+            var dto = new AdicionarCredorDto { Nome = "Financeira XPTO", Observacoes = "Cartão de crédito" };
 
             var response = await Client.PostAsJsonAsync("/api/credores", dto);
 

@@ -11,7 +11,7 @@ namespace Contas_Test.Api_Tests
     public class DividaControllerTests : ApiTestBase
     {
         private Task<Usuario> SeedOutroUsuarioAsync() =>
-            SeedAsync(new Usuario { Nome = "Outro UsuÃ¡rio", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
+            SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
         private Task<Divida> SeedDividaAsync(int idUsuario, string nome = "Financiamento", decimal valor = 1000m, bool ativo = true)
         {
@@ -46,9 +46,9 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task ObterTodos_NaoDeveRetornarDividaDeOutroUsuario()
         {
-            await SeedDividaAsync(CurrentUser.Id, "Minha DÃ­vida");
+            await SeedDividaAsync(CurrentUser.Id, "Minha Dívida");
             var outroUsuario = await SeedOutroUsuarioAsync();
-            var dividaAlheia = await SeedDividaAsync(outroUsuario.Id, "DÃ­vida Alheia");
+            var dividaAlheia = await SeedDividaAsync(outroUsuario.Id, "Dívida Alheia");
 
             var response = await Client.GetAsync("/api/dividas");
             var dividas = await response.Content.ReadFromJsonAsync<List<DividaDto>>();
@@ -59,7 +59,7 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task ObterPorId_DeveRetornarDivida_QuandoExistir()
         {
-            var divida = await SeedDividaAsync(CurrentUser.Id, "CartÃ£o de CrÃ©dito", 2000m);
+            var divida = await SeedDividaAsync(CurrentUser.Id, "Cartão de Crédito", 2000m);
 
             var response = await Client.GetAsync($"/api/dividas/{divida.Id}");
             response.EnsureSuccessStatusCode();
@@ -68,7 +68,7 @@ namespace Contas_Test.Api_Tests
 
             Assert.IsNotNull(dto);
             Assert.AreEqual(divida.Id, dto!.Id);
-            Assert.AreEqual("CartÃ£o de CrÃ©dito", dto.Nome);
+            Assert.AreEqual("Cartão de Crédito", dto.Nome);
             Assert.AreEqual(2000m, dto.Valor);
         }
 
@@ -99,7 +99,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarDividaDto
             {
                 IdUsuario = CurrentUser.Id,
-                Nome = "EmprÃ©stimo Pessoal",
+                Nome = "Empréstimo Pessoal",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
                 Parcelas = 6,
@@ -112,7 +112,7 @@ namespace Contas_Test.Api_Tests
 
             var criada = await response.Content.ReadFromJsonAsync<DividaDto>();
             Assert.IsNotNull(criada);
-            Assert.AreEqual("EmprÃ©stimo Pessoal", criada!.Nome);
+            Assert.AreEqual("Empréstimo Pessoal", criada!.Nome);
             Assert.AreNotEqual(0, criada.Id);
             Assert.IsTrue(criada.Ativo);
         }
@@ -126,7 +126,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarDividaDto
             {
                 IdUsuario = outroUsuario.Id,
-                Nome = "DÃ­vida Forjada",
+                Nome = "Dívida Forjada",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
                 Parcelas = 1,
@@ -148,7 +148,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarDividaDto
             {
                 IdUsuario = CurrentUser.Id,
-                Nome = "DÃ­vida InvÃ¡lida",
+                Nome = "Dívida Inválida",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
                 Parcelas = 1,
@@ -168,7 +168,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AdicionarDividaDto
             {
                 IdUsuario = CurrentUser.Id,
-                Nome = "DÃ­vida Vencida",
+                Nome = "Dívida Vencida",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
                 Parcelas = 1,
@@ -236,7 +236,7 @@ namespace Contas_Test.Api_Tests
             var dto = new AtualizarDividaDto
             {
                 IdUsuario = outroUsuario.Id,
-                Nome = "InvasÃ£o",
+                Nome = "Invasão",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
                 Parcelas = 1,

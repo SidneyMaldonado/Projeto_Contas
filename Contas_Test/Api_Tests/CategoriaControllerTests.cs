@@ -10,7 +10,7 @@ namespace Contas_Test.Api_Tests
     [TestClass]
     public class CategoriaControllerTests : ApiTestBase
     {
-        private Task<Categoria> SeedCategoriaAsync(string nome = "AlimentaÃ§Ã£o", bool ativo = true) =>
+        private Task<Categoria> SeedCategoriaAsync(string nome = "Alimentação", bool ativo = true) =>
             SeedAsync(new Categoria { Nome = nome, Ativo = ativo });
 
         [TestMethod]

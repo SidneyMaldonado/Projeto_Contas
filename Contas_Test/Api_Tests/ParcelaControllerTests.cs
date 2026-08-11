@@ -11,10 +11,10 @@ namespace Contas_Test.Api_Tests
     public class ParcelaControllerTests : ApiTestBase
     {
         private Task<Usuario> SeedOutroUsuarioAsync() =>
-            SeedAsync(new Usuario { Nome = "Outro UsuÃ¡rio", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
+            SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
         private Task<Categoria> SeedCategoriaAsync() =>
-            SeedAsync(new Categoria { Nome = "AlimentaÃ§Ã£o", Ativo = true });
+            SeedAsync(new Categoria { Nome = "Alimentação", Ativo = true });
 
         private Task<Conta> SeedContaAsync(int idUsuario) =>
             SeedAsync(new Conta { IdUsuario = idUsuario, Nome = "Conta Corrente", Saldo = 1000m, Ativo = true });
@@ -169,7 +169,7 @@ namespace Contas_Test.Api_Tests
                 IdDivida = dividaAlheia.Id,
                 IdCategoria = categoria.Id,
                 IdConta = contaAlheia.Id,
-                Descricao = "Tentativa de InvasÃ£o",
+                Descricao = "Tentativa de Invasão",
                 Valor = 100m,
                 DataVencimento = DateTime.Today.AddMonths(1)
             };
@@ -189,7 +189,7 @@ namespace Contas_Test.Api_Tests
                 IdDivida = divida.Id,
                 IdCategoria = categoria.Id,
                 IdConta = conta.Id,
-                Descricao = "Parcela InvÃ¡lida",
+                Descricao = "Parcela Inválida",
                 Valor = 0m,
                 DataVencimento = DateTime.Today.AddMonths(1)
             };
@@ -257,7 +257,7 @@ namespace Contas_Test.Api_Tests
                 IdDivida = divida.Id,
                 IdCategoria = categoria.Id,
                 IdConta = conta.Id,
-                Descricao = "InvasÃ£o",
+                Descricao = "Invasão",
                 Valor = 100m,
                 DataVencimento = DateTime.Today.AddMonths(1)
             };

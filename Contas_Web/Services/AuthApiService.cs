@@ -13,20 +13,20 @@ public class AuthApiService(HttpClient httpClient)
             var response = await httpClient.PostAsJsonAsync("api/auth/login", dto);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
-                return AuthResult.Fail("E-mail ou senha invÃ¡lidos.");
+                return AuthResult.Fail("E-mail ou senha inválidos.");
 
             if (!response.IsSuccessStatusCode)
                 return AuthResult.Fail($"Erro ao acessar o servidor ({(int)response.StatusCode}).");
 
             var payload = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
             if (payload is null || string.IsNullOrEmpty(payload.Token))
-                return AuthResult.Fail("Resposta invÃ¡lida do servidor.");
+                return AuthResult.Fail("Resposta inválida do servidor.");
 
             return AuthResult.Ok(payload);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            return AuthResult.Fail("NÃ£o foi possÃ­vel conectar ao servidor. Verifique sua conexÃ£o.");
+            return AuthResult.Fail("Não foi possível conectar ao servidor. Verifique sua conexão.");
         }
     }
 }

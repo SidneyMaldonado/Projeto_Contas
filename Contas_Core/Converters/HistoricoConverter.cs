@@ -18,7 +18,7 @@ public static class HistoricoConverter
 
     public static void ApplyUpdate(Historico entity, AtualizarHistoricoDto dto)
     {
-        // DataHistorico nÃ£o Ã© alterada: Ã© um registro de auditoria imutÃ¡vel.
+        // DataHistorico não é alterada: é um registro de auditoria imutável.
         entity.IdInvestimento = dto.IdInvestimento;
         entity.NomeInvestimento = dto.NomeInvestimento;
         entity.Quantidade = dto.Quantidade;
