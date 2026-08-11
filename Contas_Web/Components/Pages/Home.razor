@@ -1,22 +1,109 @@
-﻿@page "/"
+@page "/"
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using System.Globalization
+@using Contas_Contratos.Dto
 @using Contas_Web.Services
 @inject AuthSession AuthSession
+@inject DashboardApiService DashboardApi
 @inject NavigationManager NavigationManager
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+@if (_carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_resumo is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar o resumo. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted mb-2">Saldo total das contas</h6>
+                    <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.SaldoTotalContas)</p>
+                </div>
+            </div>
+        </div>
 
-Welcome to your new app.
+        <div class="col-sm-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted mb-2">Valor investido</h6>
+                    <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.ValorTotalInvestido)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted mb-2">Dívidas em aberto</h6>
+                    <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.ValorTotalDividasAbertas)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Próximas parcelas a pagar</h5>
+
+            @if (!_resumo.ProximasParcelas.Any())
+            {
+                <p class="text-muted mb-0">Nenhuma parcela pendente.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Vencimento</th>
+                                <th class="text-end">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var parcela in _resumo.ProximasParcelas)
+                            {
+                                <tr>
+                                    <td>@parcela.Descricao</td>
+                                    <td>@parcela.DataVencimento.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end">@FormatarMoeda(parcela.Valor)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
 
 @code {
+    private static readonly CultureInfo MoedaCultura = new("pt-BR");
+
+    private bool _carregando = true;
+    private DashboardResumoDto? _resumo;
+
     protected override async Task OnInitializedAsync()
     {
         await AuthSession.RestoreAsync();
         if (!AuthSession.IsAuthenticated)
         {
             NavigationManager.NavigateTo("/login");
+            return;
         }
+
+        _resumo = await DashboardApi.ObterResumoAsync();
+        _carregando = false;
     }
+
+    private static string FormatarMoeda(decimal valor) => valor.ToString("C", MoedaCultura);
 }

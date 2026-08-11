@@ -25,6 +25,20 @@ public class Divida : ISoftDelete
     public Credor? Credor { get; set; }
 
     [Required]
+    [Column("id_conta")]
+    public int IdConta { get; set; }
+
+    [ForeignKey(nameof(IdConta))]
+    public Conta? Conta { get; set; }
+
+    [Required]
+    [Column("id_categoria")]
+    public int IdCategoria { get; set; }
+
+    [ForeignKey(nameof(IdCategoria))]
+    public Categoria? Categoria { get; set; }
+
+    [Required]
     [MaxLength(100)]
     [Column("nm_divida")]
     public string Nome { get; set; } = string.Empty;

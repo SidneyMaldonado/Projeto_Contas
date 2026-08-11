@@ -19,13 +19,15 @@ namespace Contas_Test.Api_Tests
         private Task<Conta> SeedContaAsync(int idUsuario) =>
             SeedAsync(new Conta { IdUsuario = idUsuario, Nome = "Conta Corrente", Saldo = 1000m, Ativo = true });
 
-        private Task<Divida> SeedDividaAsync(int idUsuario)
+        private Task<Divida> SeedDividaAsync(int idUsuario, int idCategoria, int idConta)
         {
             var dataVencimento = DateTime.Today.AddMonths(1);
 
             return SeedAsync(new Divida
             {
                 IdUsuario = idUsuario,
+                IdConta = idConta,
+                IdCategoria = idCategoria,
                 Nome = "Financiamento",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
@@ -39,7 +41,7 @@ namespace Contas_Test.Api_Tests
         {
             var categoria = await SeedCategoriaAsync();
             var conta = await SeedContaAsync(idUsuario);
-            var divida = await SeedDividaAsync(idUsuario);
+            var divida = await SeedDividaAsync(idUsuario, categoria.Id, conta.Id);
 
             return (divida, categoria, conta);
         }

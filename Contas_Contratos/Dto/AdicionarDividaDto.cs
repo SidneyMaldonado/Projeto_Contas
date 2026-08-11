@@ -10,6 +10,12 @@ public class AdicionarDividaDto
     public int? IdCredor { get; set; }
 
     [Required]
+    public int IdConta { get; set; }
+
+    [Required]
+    public int IdCategoria { get; set; }
+
+    [Required]
     [MaxLength(100)]
     public string Nome { get; set; } = string.Empty;
 

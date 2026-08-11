@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -13,13 +14,23 @@ namespace Contas_Test.Api_Tests
         private Task<Usuario> SeedOutroUsuarioAsync() =>
             SeedAsync(new Usuario { Nome = "Outro Usuário", Email = $"{Guid.NewGuid()}@teste.com", Senha = "hash", Ativo = true });
 
-        private Task<Divida> SeedDividaAsync(int idUsuario, string nome = "Financiamento", decimal valor = 1000m, bool ativo = true)
+        private Task<Categoria> SeedCategoriaAsync() =>
+            SeedAsync(new Categoria { Nome = "Financiamentos", Ativo = true });
+
+        private Task<Conta> SeedContaAsync(int idUsuario) =>
+            SeedAsync(new Conta { IdUsuario = idUsuario, Nome = "Conta Corrente", Saldo = 1000m, Ativo = true });
+
+        private async Task<Divida> SeedDividaAsync(int idUsuario, string nome = "Financiamento", decimal valor = 1000m, bool ativo = true)
         {
+            var categoria = await SeedCategoriaAsync();
+            var conta = await SeedContaAsync(idUsuario);
             var dataVencimento = DateTime.Today.AddMonths(1);
 
-            return SeedAsync(new Divida
+            return await SeedAsync(new Divida
             {
                 IdUsuario = idUsuario,
+                IdConta = conta.Id,
+                IdCategoria = categoria.Id,
                 Nome = nome,
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
@@ -94,11 +105,15 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task Adicionar_DeveCriarDivida_QuandoValida()
         {
+            var categoria = await SeedCategoriaAsync();
+            var conta = await SeedContaAsync(CurrentUser.Id);
             var dataVencimento = DateTime.Today.AddMonths(1);
 
             var dto = new AdicionarDividaDto
             {
                 IdUsuario = CurrentUser.Id,
+                IdConta = conta.Id,
+                IdCategoria = categoria.Id,
                 Nome = "Empréstimo Pessoal",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
@@ -118,14 +133,78 @@ namespace Contas_Test.Api_Tests
         }
 
         [TestMethod]
+        public async Task Adicionar_DeveGerarParcelas_ComValorDivididoEDataIncrementadaPorMes()
+        {
+            var categoria = await SeedCategoriaAsync();
+            var conta = await SeedContaAsync(CurrentUser.Id);
+            var dataVencimento = DateTime.Today.AddMonths(1);
+
+            var dto = new AdicionarDividaDto
+            {
+                IdUsuario = CurrentUser.Id,
+                IdConta = conta.Id,
+                IdCategoria = categoria.Id,
+                Nome = "Financiamento Veículo",
+                DiaVencimento = dataVencimento.Day,
+                DataPrimeiroVencimento = dataVencimento,
+                Parcelas = 3,
+                Valor = 100m
+            };
+
+            var response = await Client.PostAsJsonAsync("/api/dividas", dto);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+            var criada = await response.Content.ReadFromJsonAsync<DividaDto>();
+
+            var parcelasResponse = await Client.GetAsync("/api/parcelas");
+            var parcelas = await parcelasResponse.Content.ReadFromJsonAsync<List<ParcelaDto>>();
+            var geradas = parcelas!.Where(p => p.IdDivida == criada!.Id).OrderBy(p => p.DataVencimento).ToList();
+
+            Assert.HasCount(3, geradas);
+            Assert.AreEqual(dataVencimento.Date, geradas[0].DataVencimento.Date);
+            Assert.AreEqual(dataVencimento.AddMonths(1).Date, geradas[1].DataVencimento.Date);
+            Assert.AreEqual(dataVencimento.AddMonths(2).Date, geradas[2].DataVencimento.Date);
+            Assert.IsTrue(geradas.All(p => p.IdConta == conta.Id && p.IdCategoria == categoria.Id));
+            Assert.AreEqual(100m, geradas.Sum(p => p.Valor));
+        }
+
+        [TestMethod]
+        public async Task Adicionar_DeveRetornarNotFound_QuandoContaNaoPertenceAoUsuarioAtual()
+        {
+            var outroUsuario = await SeedOutroUsuarioAsync();
+            var contaAlheia = await SeedContaAsync(outroUsuario.Id);
+            var categoria = await SeedCategoriaAsync();
+            var dataVencimento = DateTime.Today.AddMonths(1);
+
+            var dto = new AdicionarDividaDto
+            {
+                IdUsuario = CurrentUser.Id,
+                IdConta = contaAlheia.Id,
+                IdCategoria = categoria.Id,
+                Nome = "Invasão",
+                DiaVencimento = dataVencimento.Day,
+                DataPrimeiroVencimento = dataVencimento,
+                Parcelas = 1,
+                Valor = 100m
+            };
+
+            var response = await Client.PostAsJsonAsync("/api/dividas", dto);
+
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
         public async Task Adicionar_DeveIgnorarIdUsuarioDoDto_EUsarUsuarioAutenticado()
         {
             var outroUsuario = await SeedOutroUsuarioAsync();
+            var categoria = await SeedCategoriaAsync();
+            var conta = await SeedContaAsync(CurrentUser.Id);
             var dataVencimento = DateTime.Today.AddMonths(1);
 
             var dto = new AdicionarDividaDto
             {
                 IdUsuario = outroUsuario.Id,
+                IdConta = conta.Id,
+                IdCategoria = categoria.Id,
                 Nome = "Dívida Forjada",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
@@ -143,11 +222,15 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task Adicionar_DeveRetornarBadRequest_QuandoValorInvalido()
         {
+            var categoria = await SeedCategoriaAsync();
+            var conta = await SeedContaAsync(CurrentUser.Id);
             var dataVencimento = DateTime.Today.AddMonths(1);
 
             var dto = new AdicionarDividaDto
             {
                 IdUsuario = CurrentUser.Id,
+                IdConta = conta.Id,
+                IdCategoria = categoria.Id,
                 Nome = "Dívida Inválida",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,
@@ -163,11 +246,15 @@ namespace Contas_Test.Api_Tests
         [TestMethod]
         public async Task Adicionar_DeveRetornarBadRequest_QuandoDataNoPassado()
         {
+            var categoria = await SeedCategoriaAsync();
+            var conta = await SeedContaAsync(CurrentUser.Id);
             var dataVencimento = DateTime.Today.AddDays(-5);
 
             var dto = new AdicionarDividaDto
             {
                 IdUsuario = CurrentUser.Id,
+                IdConta = conta.Id,
+                IdCategoria = categoria.Id,
                 Nome = "Dívida Vencida",
                 DiaVencimento = dataVencimento.Day,
                 DataPrimeiroVencimento = dataVencimento,

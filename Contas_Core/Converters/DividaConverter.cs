@@ -9,6 +9,8 @@ public static class DividaConverter
     {
         IdUsuario = dto.IdUsuario,
         IdCredor = dto.IdCredor,
+        IdConta = dto.IdConta,
+        IdCategoria = dto.IdCategoria,
         Nome = dto.Nome,
         DiaVencimento = dto.DiaVencimento,
         DataPrimeiroVencimento = dto.DataPrimeiroVencimento,
@@ -33,6 +35,8 @@ public static class DividaConverter
         Id = entity.Id,
         IdUsuario = entity.IdUsuario,
         IdCredor = entity.IdCredor,
+        IdConta = entity.IdConta,
+        IdCategoria = entity.IdCategoria,
         Nome = entity.Nome,
         DiaVencimento = entity.DiaVencimento,
         DataPrimeiroVencimento = entity.DataPrimeiroVencimento,

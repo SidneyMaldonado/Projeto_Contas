@@ -4,6 +4,7 @@ using Contas_Core.UseCase.Carteira;
 using Contas_Core.UseCase.Categoria;
 using Contas_Core.UseCase.Conta;
 using Contas_Core.UseCase.Credor;
+using Contas_Core.UseCase.Dashboard;
 using Contas_Core.UseCase.Divida;
 using Contas_Core.UseCase.Historico;
 using Contas_Core.UseCase.Investimento;
@@ -130,9 +131,12 @@ builder.Services.AddScoped<InativarCredorUseCase>();
 builder.Services.AddScoped<ObterPorIdCredorUseCase>();
 builder.Services.AddScoped<ObterTodosCredorUseCase>();
 
+builder.Services.AddScoped<ObterResumoDashboardUseCase>();
+
 builder.Services.AddScoped<AdicionarDividaUseCase>();
 builder.Services.AddScoped<AtualizarDividaUseCase>();
 builder.Services.AddScoped<ExcluirDividaUseCase>();
+builder.Services.AddScoped<GerarParcelasDividaUseCase>();
 builder.Services.AddScoped<InativarDividaUseCase>();
 builder.Services.AddScoped<ObterPorIdDividaUseCase>();
 builder.Services.AddScoped<ObterTodosDividaUseCase>();
