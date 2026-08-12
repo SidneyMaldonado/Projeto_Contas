@@ -14,12 +14,17 @@ builder.Services.AddHttpClient<AuthApiService>(client =>
     client.BaseAddress = new Uri(baseUrl);
 });
 
-builder.Services.AddScoped<AuthHeaderHandler>();
 builder.Services.AddHttpClient<DashboardApiService>(client =>
 {
     var baseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5210/";
     client.BaseAddress = new Uri(baseUrl);
-}).AddHttpMessageHandler<AuthHeaderHandler>();
+});
+
+builder.Services.AddHttpClient<ContasApiService>(client =>
+{
+    var baseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5210/";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 var app = builder.Build();
 

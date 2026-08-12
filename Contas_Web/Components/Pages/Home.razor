@@ -5,6 +5,7 @@
 @using Contas_Web.Services
 @inject AuthSession AuthSession
 @inject DashboardApiService DashboardApi
+@inject ContasApiService ContasApi
 @inject NavigationManager NavigationManager
 
 <PageTitle>Home</PageTitle>
@@ -13,73 +14,131 @@
 {
     <p>Carregando...</p>
 }
-else if (_resumo is null)
-{
-    <div class="alert alert-danger" role="alert">
-        Não foi possível carregar o resumo. Tente novamente mais tarde.
-    </div>
-}
 else
 {
-    <div class="row g-3 mb-4">
-        <div class="col-sm-6 col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="card-subtitle text-muted mb-2">Saldo total das contas</h6>
-                    <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.SaldoTotalContas)</p>
+    @if (_resumo is null)
+    {
+        <div class="alert alert-danger" role="alert">
+            Não foi possível carregar o resumo. Tente novamente mais tarde.
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-lg-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle text-muted mb-2">Saldo total das contas</h6>
+                        <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.SaldoTotalContas)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle text-muted mb-2">Valor investido</h6>
+                        <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.ValorTotalInvestido)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle text-muted mb-2">Dívidas em aberto</h6>
+                        <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.ValorTotalDividasAbertas)</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-sm-6 col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="card-subtitle text-muted mb-2">Valor investido</h6>
-                    <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.ValorTotalInvestido)</p>
-                </div>
-            </div>
-        </div>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Próximas parcelas a pagar</h5>
 
-        <div class="col-sm-6 col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h6 class="card-subtitle text-muted mb-2">Dívidas em aberto</h6>
-                    <p class="card-text fs-4 fw-semibold">@FormatarMoeda(_resumo.ValorTotalDividasAbertas)</p>
-                </div>
+                @if (!_resumo.ProximasParcelas.Any())
+                {
+                    <p class="text-muted mb-0">Nenhuma parcela pendente.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th>Vencimento</th>
+                                    <th class="text-end">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var parcela in _resumo.ProximasParcelas)
+                                {
+                                    <tr>
+                                        <td>@parcela.Descricao</td>
+                                        <td>@parcela.DataVencimento.ToString("dd/MM/yyyy")</td>
+                                        <td class="text-end">@FormatarMoeda(parcela.Valor)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         </div>
-    </div>
+    }
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <h5 class="card-title mb-3">Próximas parcelas a pagar</h5>
+            <h5 class="card-title mb-3">Contas</h5>
 
-            @if (!_resumo.ProximasParcelas.Any())
+            @if (_contas is null)
             {
-                <p class="text-muted mb-0">Nenhuma parcela pendente.</p>
+                <div class="alert alert-danger" role="alert">
+                    Não foi possível carregar as contas. Tente novamente mais tarde.
+                </div>
+            }
+            else if (_contas.Count == 0)
+            {
+                <p class="text-muted mb-0">Nenhuma conta cadastrada.</p>
             }
             else
             {
                 <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
+                    <table class="table table-sm align-middle mb-3">
                         <thead>
                             <tr>
-                                <th>Descrição</th>
-                                <th>Vencimento</th>
-                                <th class="text-end">Valor</th>
+                                <th>Nome</th>
+                                <th class="text-end">Saldo</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var parcela in _resumo.ProximasParcelas)
+                            @foreach (var conta in _contas)
                             {
                                 <tr>
-                                    <td>@parcela.Descricao</td>
-                                    <td>@parcela.DataVencimento.ToString("dd/MM/yyyy")</td>
-                                    <td class="text-end">@FormatarMoeda(parcela.Valor)</td>
+                                    <td>@conta.Nome</td>
+                                    <td class="text-end">
+                                        <input type="number" step="0.01" min="0"
+                                               class="form-control form-control-sm text-end d-inline-block"
+                                               style="max-width: 160px;"
+                                               @bind="conta.Saldo" />
+                                    </td>
                                 </tr>
                             }
                         </tbody>
                     </table>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-primary" disabled="@_salvandoSaldos" @onclick="AtualizarSaldosAsync">
+                        @(_salvandoSaldos ? "Atualizando..." : "Atualizar Saldos")
+                    </button>
+
+                    @if (_mensagemSaldos is not null)
+                    {
+                        <span class="@(_saldosOk ? "text-success" : "text-danger")">@_mensagemSaldos</span>
+                    }
                 </div>
             }
         </div>
@@ -91,6 +150,10 @@ else
 
     private bool _carregando = true;
     private DashboardResumoDto? _resumo;
+    private List<ContaResumoDto>? _contas;
+    private bool _salvandoSaldos;
+    private bool _saldosOk;
+    private string? _mensagemSaldos;
 
     protected override async Task OnInitializedAsync()
     {
@@ -102,7 +165,27 @@ else
         }
 
         _resumo = await DashboardApi.ObterResumoAsync();
+        _contas = (await ContasApi.ObterResumoAsync())?.ToList();
         _carregando = false;
+    }
+
+    private async Task AtualizarSaldosAsync()
+    {
+        if (_contas is null)
+            return;
+
+        _salvandoSaldos = true;
+        _mensagemSaldos = null;
+
+        _saldosOk = await ContasApi.AtualizarSaldosAsync(_contas);
+        _mensagemSaldos = _saldosOk
+            ? "Saldos atualizados com sucesso."
+            : "Não foi possível atualizar os saldos. Tente novamente.";
+
+        if (_saldosOk)
+            _resumo = await DashboardApi.ObterResumoAsync();
+
+        _salvandoSaldos = false;
     }
 
     private static string FormatarMoeda(decimal valor) => valor.ToString("C", MoedaCultura);
