@@ -1,0 +1,123 @@
+@page "/parcelas"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject ParcelasApiService ParcelasApi
+@inject DividasApiService DividasApi
+@inject ContasApiService ContasApi
+@inject CategoriasApiService CategoriasApi
+
+<PageTitle>Parcelas</PageTitle>
+
+<h1 class="h3 mb-3">Parcelas</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_parcelas is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar as parcelas. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por descrição" UrlNovo="/parcelas/novo" />
+
+    @if (!Filtradas.Any())
+    {
+        <p class="text-muted">Nenhuma parcela encontrada.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Dívida</th>
+                        <th>Conta</th>
+                        <th>Categoria</th>
+                        <th class="text-end">Valor</th>
+                        <th>Vencimento</th>
+                        <th>Pagamento</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var parcela in Filtradas)
+                    {
+                        <tr>
+                            <td>@parcela.Descricao</td>
+                            <td>@Nome(_dividas, parcela.IdDivida)</td>
+                            <td>@Nome(_contas, parcela.IdConta)</td>
+                            <td>@Nome(_categorias, parcela.IdCategoria)</td>
+                            <td class="text-end">@Formato.Moeda(parcela.Valor)</td>
+                            <td>@Formato.Data(parcela.DataVencimento)</td>
+                            <td>
+                                @if (parcela.Pago)
+                                {
+                                    <span class="badge text-bg-success">Pago em @Formato.Data(parcela.DataPagamento)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-warning">Em aberto</span>
+                                }
+                            </td>
+                            <td><Situacao Ativo="parcela.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/parcelas/{parcela.Id}/editar")"
+                                            Ativo="parcela.Ativo"
+                                            OnInativar="() => InativarAsync(parcela.Id)"
+                                            OnExcluir="() => ExcluirAsync(parcela.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtradas.Count() de @_parcelas.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<ParcelaDto>? _parcelas;
+
+    private Dictionary<int, string> _dividas = [];
+    private Dictionary<int, string> _contas = [];
+    private Dictionary<int, string> _categorias = [];
+
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+    {
+        var parcelas = ParcelasApi.ObterTodosAsync();
+        var dividas = DividasApi.ObterTodosAsync();
+        var contas = ContasApi.ObterTodosAsync();
+        var categorias = CategoriasApi.ObterTodosAsync();
+
+        _parcelas = (await parcelas)?.OrderByDescending(p => p.DataVencimento).ToList();
+        _dividas = (await dividas)?.ToDictionary(d => d.Id, d => d.Nome) ?? [];
+        _contas = (await contas)?.ToDictionary(c => c.Id, c => c.Nome) ?? [];
+        _categorias = (await categorias)?.ToDictionary(c => c.Id, c => c.Nome) ?? [];
+    }
+
+    private IEnumerable<ParcelaDto> Filtradas => (_parcelas ?? [])
+        .Where(p => _mostrarInativos || p.Ativo)
+        .Where(p => Filtro.Corresponde(_filtro, p.Descricao));
+
+    private static string Nome(Dictionary<int, string> origem, int id) =>
+        origem.TryGetValue(id, out var nome) ? nome : $"#{id}";
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await ParcelasApi.InativarAsync(id), "Parcela inativada.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await ParcelasApi.ExcluirAsync(id), "Parcela excluída.");
+}

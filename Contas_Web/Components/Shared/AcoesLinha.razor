@@ -1,0 +1,72 @@
+@* Ações por linha da listagem. A confirmação é inline de propósito: um confirm()
+   via JS bloquearia o circuito do Blazor Server (e a automação de browser). *@
+
+@if (_confirmando is null)
+{
+    <div class="btn-group btn-group-sm" role="group">
+        <a class="btn btn-outline-secondary" href="@UrlEditar">Editar</a>
+
+        @if (Ativo)
+        {
+            <button type="button" class="btn btn-outline-warning"
+                    @onclick="() => _confirmando = Acao.Inativar">
+                Inativar
+            </button>
+        }
+
+        <button type="button" class="btn btn-outline-danger"
+                @onclick="() => _confirmando = Acao.Excluir">
+            Excluir
+        </button>
+    </div>
+}
+else
+{
+    <div class="d-inline-flex align-items-center gap-2">
+        <span class="small text-nowrap">
+            @(_confirmando == Acao.Inativar ? "Inativar?" : "Excluir de vez?")
+        </span>
+
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-danger" disabled="@_executando" @onclick="ConfirmarAsync">Sim</button>
+            <button type="button" class="btn btn-outline-secondary" disabled="@_executando"
+                    @onclick="() => _confirmando = null">
+                Não
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    private enum Acao { Inativar, Excluir }
+
+    private Acao? _confirmando;
+    private bool _executando;
+
+    [Parameter, EditorRequired] public string UrlEditar { get; set; } = string.Empty;
+
+    /// <summary>Quando false, o botão Inativar é omitido (o registro já está inativo).</summary>
+    [Parameter] public bool Ativo { get; set; } = true;
+
+    [Parameter] public EventCallback OnInativar { get; set; }
+
+    [Parameter] public EventCallback OnExcluir { get; set; }
+
+    private async Task ConfirmarAsync()
+    {
+        _executando = true;
+
+        try
+        {
+            if (_confirmando == Acao.Inativar)
+                await OnInativar.InvokeAsync();
+            else
+                await OnExcluir.InvokeAsync();
+        }
+        finally
+        {
+            _executando = false;
+            _confirmando = null;
+        }
+    }
+}

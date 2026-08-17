@@ -1,0 +1,225 @@
+@page "/dividas/novo"
+@page "/dividas/{Id:int}/editar"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject DividasApiService DividasApi
+@inject ContasApiService ContasApi
+@inject CategoriasApiService CategoriasApi
+@inject CredoresApiService CredoresApi
+
+<PageTitle>@Titulo</PageTitle>
+
+<h1 class="h3 mb-3">@Titulo</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_naoEncontrado)
+{
+    <div class="alert alert-warning" role="alert">Dívida não encontrada.</div>
+    <a class="btn btn-outline-secondary" href="/dividas">Voltar</a>
+}
+else
+{
+    <div class="card shadow-sm" style="max-width: 720px;">
+        <div class="card-body">
+            <EditForm Model="_modelo" OnValidSubmit="SalvarAsync">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label" for="nome">Nome</label>
+                    <InputText id="nome" class="form-control" @bind-Value="_modelo.Nome" />
+                    <ValidationMessage For="() => _modelo.Nome" />
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="conta">Conta</label>
+                        @if (Editando)
+                        {
+                            <input id="conta" class="form-control" readonly
+                                   value="@(_contas.FirstOrDefault(c => c.Id == _modelo.IdConta)?.Nome ?? "—")" />
+                            <div class="form-text">A API não permite trocar a conta de uma dívida existente.</div>
+                        }
+                        else
+                        {
+                            <InputSelect id="conta" class="form-select" @bind-Value="_modelo.IdConta">
+                                <option value="0">Selecione...</option>
+                                @foreach (var conta in _contas)
+                                {
+                                    <option value="@conta.Id">@conta.Nome</option>
+                                }
+                            </InputSelect>
+                        }
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="categoria">Categoria</label>
+                        @if (Editando)
+                        {
+                            <input id="categoria" class="form-control" readonly
+                                   value="@(_categorias.FirstOrDefault(c => c.Id == _modelo.IdCategoria)?.Nome ?? "—")" />
+                            <div class="form-text">A API não permite trocar a categoria de uma dívida existente.</div>
+                        }
+                        else
+                        {
+                            <InputSelect id="categoria" class="form-select" @bind-Value="_modelo.IdCategoria">
+                                <option value="0">Selecione...</option>
+                                @foreach (var categoria in _categorias)
+                                {
+                                    <option value="@categoria.Id">@categoria.Nome</option>
+                                }
+                            </InputSelect>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="credor">Credor (opcional)</label>
+                    <InputSelect id="credor" class="form-select" @bind-Value="_modelo.IdCredor">
+                        <option value="">Sem credor</option>
+                        @foreach (var credor in _credores)
+                        {
+                            <option value="@credor.Id">@credor.Nome</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="valor">Valor</label>
+                        <InputNumber id="valor" class="form-control" step="0.01" @bind-Value="_modelo.Valor" />
+                        <ValidationMessage For="() => _modelo.Valor" />
+                        <div class="form-text">Maior que zero.</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="parcelas">Parcelas</label>
+                        <InputNumber id="parcelas" class="form-control" @bind-Value="_modelo.Parcelas" />
+                        <ValidationMessage For="() => _modelo.Parcelas" />
+                        <div class="form-text">No mínimo 1.</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="vencimento">1º vencimento</label>
+                        <InputDate id="vencimento" class="form-control"
+                                   @bind-Value="_modelo.DataPrimeiroVencimento" />
+                        <ValidationMessage For="() => _modelo.DataPrimeiroVencimento" />
+                        <div class="form-text">
+                            Dia do vencimento: @_modelo.DataPrimeiroVencimento.Day (derivado desta data).
+                        </div>
+                    </div>
+                </div>
+
+                @if (!Editando)
+                {
+                    <div class="alert alert-info py-2" role="alert">
+                        As parcelas são geradas automaticamente pela API ao criar a dívida.
+                        A data do primeiro vencimento não pode estar no passado.
+                    </div>
+                }
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@_salvando">
+                        @(_salvando ? "Salvando..." : "Salvar")
+                    </button>
+                    <a class="btn btn-outline-secondary" href="/dividas">Cancelar</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private readonly AdicionarDividaDto _modelo = new() { DataPrimeiroVencimento = DateTime.Today };
+
+    private List<ContaDto> _contas = [];
+    private List<CategoriaDto> _categorias = [];
+    private List<CredorDto> _credores = [];
+
+    private bool _naoEncontrado;
+    private bool _salvando;
+
+    private bool Editando => Id.HasValue;
+
+    private string Titulo => Editando ? "Editar dívida" : "Nova dívida";
+
+    protected override async Task CarregarAsync()
+    {
+        var contas = ContasApi.ObterTodosAsync();
+        var categorias = CategoriasApi.ObterTodosAsync();
+        var credores = CredoresApi.ObterTodosAsync();
+
+        _contas = (await contas)?.Where(c => c.Ativo).OrderBy(c => c.Nome).ToList() ?? [];
+        _categorias = (await categorias)?.Where(c => c.Ativo).OrderBy(c => c.Nome).ToList() ?? [];
+        _credores = (await credores)?.Where(c => c.Ativo).OrderBy(c => c.Nome).ToList() ?? [];
+
+        if (!Editando)
+            return;
+
+        var divida = await DividasApi.ObterPorIdAsync(Id!.Value);
+        if (divida is null)
+        {
+            _naoEncontrado = true;
+            return;
+        }
+
+        _modelo.Nome = divida.Nome;
+        _modelo.IdConta = divida.IdConta;
+        _modelo.IdCategoria = divida.IdCategoria;
+        _modelo.IdCredor = divida.IdCredor;
+        _modelo.Valor = divida.Valor;
+        _modelo.Parcelas = divida.Parcelas;
+        _modelo.DataPrimeiroVencimento = divida.DataPrimeiroVencimento;
+    }
+
+    private async Task SalvarAsync()
+    {
+        LimparMensagem();
+
+        // [Required] em int é no-op no DataAnnotationsValidator: a opção "Selecione..."
+        // vale 0 e passaria pela validação do EditForm. Na edição os dois vêm do
+        // registro carregado, e a API não permite trocá-los.
+        if (!Editando && (_modelo.IdConta == 0 || _modelo.IdCategoria == 0))
+        {
+            DefinirErro("Selecione a conta e a categoria.");
+            return;
+        }
+
+        _salvando = true;
+
+        _modelo.IdUsuario = UsuarioId;
+
+        // AdicionarDividaBiz exige DataPrimeiroVencimento.Day == DiaVencimento, então
+        // o dia é sempre derivado da data em vez de ser digitado à parte.
+        _modelo.DiaVencimento = _modelo.DataPrimeiroVencimento.Day;
+
+        var resultado = Editando
+            ? await DividasApi.AtualizarAsync(Id!.Value, new AtualizarDividaDto
+                {
+                    IdUsuario = _modelo.IdUsuario,
+                    IdCredor = _modelo.IdCredor,
+                    Nome = _modelo.Nome,
+                    DiaVencimento = _modelo.DiaVencimento,
+                    DataPrimeiroVencimento = _modelo.DataPrimeiroVencimento,
+                    Parcelas = _modelo.Parcelas,
+                    Valor = _modelo.Valor
+                })
+            : await DividasApi.AdicionarAsync(_modelo);
+
+        _salvando = false;
+
+        if (resultado.Sucesso)
+        {
+            Navegacao.NavigateTo("/dividas");
+            return;
+        }
+
+        DefinirErro(resultado.Erro);
+    }
+}

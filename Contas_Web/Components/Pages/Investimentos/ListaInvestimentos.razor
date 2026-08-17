@@ -1,0 +1,100 @@
+@page "/investimentos"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject InvestimentosApiService InvestimentosApi
+@inject CarteirasApiService CarteirasApi
+
+<PageTitle>Investimentos</PageTitle>
+
+<h1 class="h3 mb-3">Investimentos</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_investimentos is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar os investimentos. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por nome ou observação" UrlNovo="/investimentos/novo" />
+
+    @if (!Filtrados.Any())
+    {
+        <p class="text-muted">Nenhum investimento encontrado.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Carteira</th>
+                        <th class="text-end">Quantidade</th>
+                        <th class="text-end">Cotação</th>
+                        <th>Observação</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var investimento in Filtrados)
+                    {
+                        <tr>
+                            <td>@investimento.Nome</td>
+                            <td>@NomeCarteira(investimento.IdCarteira)</td>
+                            <td class="text-end">@Formato.Quantidade(investimento.Quantidade)</td>
+                            <td class="text-end">@Formato.Moeda(investimento.Cotacao)</td>
+                            <td>@Formato.Texto(investimento.Observacao)</td>
+                            <td><Situacao Ativo="investimento.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/investimentos/{investimento.Id}/editar")"
+                                            Ativo="investimento.Ativo"
+                                            OnInativar="() => InativarAsync(investimento.Id)"
+                                            OnExcluir="() => ExcluirAsync(investimento.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtrados.Count() de @_investimentos.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<InvestimentoDto>? _investimentos;
+    private Dictionary<int, string> _carteiras = [];
+
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+    {
+        var investimentos = InvestimentosApi.ObterTodosAsync();
+        var carteiras = CarteirasApi.ObterTodosAsync();
+
+        _investimentos = (await investimentos)?.OrderBy(i => i.Nome).ToList();
+        _carteiras = (await carteiras)?.ToDictionary(c => c.Id, c => c.Nome) ?? [];
+    }
+
+    private IEnumerable<InvestimentoDto> Filtrados => (_investimentos ?? [])
+        .Where(i => _mostrarInativos || i.Ativo)
+        .Where(i => Filtro.Corresponde(_filtro, i.Nome, i.Observacao));
+
+    private string NomeCarteira(int id) => _carteiras.TryGetValue(id, out var nome) ? nome : $"#{id}";
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await InvestimentosApi.InativarAsync(id), "Investimento inativado.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await InvestimentosApi.ExcluirAsync(id), "Investimento excluído.");
+}

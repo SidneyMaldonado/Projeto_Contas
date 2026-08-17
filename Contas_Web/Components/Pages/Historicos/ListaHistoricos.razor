@@ -1,0 +1,105 @@
+@page "/historicos"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject HistoricosApiService HistoricosApi
+@inject InvestimentosApiService InvestimentosApi
+
+<PageTitle>Históricos</PageTitle>
+
+<h1 class="h3 mb-3">Históricos</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_historicos is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar os históricos. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por investimento ou observação" UrlNovo="/historicos/novo" />
+
+    @if (!Filtrados.Any())
+    {
+        <p class="text-muted">Nenhum histórico encontrado.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Investimento</th>
+                        <th class="text-end">Quantidade</th>
+                        <th class="text-end">Cotação</th>
+                        <th>Observação</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var historico in Filtrados)
+                    {
+                        <tr>
+                            <td>@Formato.Data(historico.DataHistorico)</td>
+                            <td>@NomeInvestimento(historico)</td>
+                            <td class="text-end">@Formato.Quantidade(historico.Quantidade)</td>
+                            <td class="text-end">@Formato.Moeda(historico.Cotacao)</td>
+                            <td>@Formato.Texto(historico.Observacao)</td>
+                            <td><Situacao Ativo="historico.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/historicos/{historico.Id}/editar")"
+                                            Ativo="historico.Ativo"
+                                            OnInativar="() => InativarAsync(historico.Id)"
+                                            OnExcluir="() => ExcluirAsync(historico.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtrados.Count() de @_historicos.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<HistoricoDto>? _historicos;
+    private Dictionary<int, string> _investimentos = [];
+
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+    {
+        var historicos = HistoricosApi.ObterTodosAsync();
+        var investimentos = InvestimentosApi.ObterTodosAsync();
+
+        _historicos = (await historicos)?.OrderByDescending(h => h.DataHistorico).ToList();
+        _investimentos = (await investimentos)?.ToDictionary(i => i.Id, i => i.Nome) ?? [];
+    }
+
+    private IEnumerable<HistoricoDto> Filtrados => (_historicos ?? [])
+        .Where(h => _mostrarInativos || h.Ativo)
+        .Where(h => Filtro.Corresponde(_filtro, NomeInvestimento(h), h.Observacao));
+
+    // tb_historico guarda nm_investimento desnormalizado; o nome atual do investimento
+    // tem precedência, e o campo do próprio histórico é o fallback.
+    private string NomeInvestimento(HistoricoDto historico) =>
+        _investimentos.TryGetValue(historico.IdInvestimento, out var nome)
+            ? nome
+            : Formato.Texto(historico.NomeInvestimento);
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await HistoricosApi.InativarAsync(id), "Histórico inativado.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await HistoricosApi.ExcluirAsync(id), "Histórico excluído.");
+}

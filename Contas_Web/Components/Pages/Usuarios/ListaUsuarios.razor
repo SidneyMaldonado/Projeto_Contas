@@ -1,0 +1,89 @@
+@page "/usuarios"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject UsuariosApiService UsuariosApi
+
+<PageTitle>Usuários</PageTitle>
+
+<h1 class="h3 mb-3">Usuários</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_usuarios is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar os usuários. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por nome ou e-mail" UrlNovo="/usuarios/novo" />
+
+    @if (!Filtrados.Any())
+    {
+        <p class="text-muted">Nenhum usuário encontrado.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var usuario in Filtrados)
+                    {
+                        <tr>
+                            <td>
+                                @usuario.Nome
+                                @if (usuario.Id == UsuarioId)
+                                {
+                                    <span class="badge text-bg-light ms-1">você</span>
+                                }
+                            </td>
+                            <td>@usuario.Email</td>
+                            <td><Situacao Ativo="usuario.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/usuarios/{usuario.Id}/editar")"
+                                            Ativo="usuario.Ativo"
+                                            OnInativar="() => InativarAsync(usuario.Id)"
+                                            OnExcluir="() => ExcluirAsync(usuario.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtrados.Count() de @_usuarios.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<UsuarioDto>? _usuarios;
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+        => _usuarios = (await UsuariosApi.ObterTodosAsync())?.OrderBy(u => u.Nome).ToList();
+
+    private IEnumerable<UsuarioDto> Filtrados => (_usuarios ?? [])
+        .Where(u => _mostrarInativos || u.Ativo)
+        .Where(u => Filtro.Corresponde(_filtro, u.Nome, u.Email));
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await UsuariosApi.InativarAsync(id), "Usuário inativado.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await UsuariosApi.ExcluirAsync(id), "Usuário excluído.");
+}

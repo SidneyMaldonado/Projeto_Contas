@@ -8,23 +8,36 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<AuthSession>();
+
+var apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5210/";
+
 builder.Services.AddHttpClient<AuthApiService>(client =>
 {
-    var baseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5210/";
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(apiBaseUrl);
 });
 
 builder.Services.AddHttpClient<DashboardApiService>(client =>
 {
-    var baseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5210/";
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(apiBaseUrl);
 });
 
-builder.Services.AddHttpClient<ContasApiService>(client =>
+// ApiClient concentra o HttpClient e o Bearer token; os serviços por entidade
+// abaixo só mapeiam as rotas de cada recurso.
+builder.Services.AddHttpClient<ApiClient>(client =>
 {
-    var baseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5210/";
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(apiBaseUrl);
 });
+
+builder.Services.AddScoped<CarteirasApiService>();
+builder.Services.AddScoped<CategoriasApiService>();
+builder.Services.AddScoped<ContasApiService>();
+builder.Services.AddScoped<CredoresApiService>();
+builder.Services.AddScoped<DividasApiService>();
+builder.Services.AddScoped<HistoricosApiService>();
+builder.Services.AddScoped<InvestimentosApiService>();
+builder.Services.AddScoped<OperacoesApiService>();
+builder.Services.AddScoped<ParcelasApiService>();
+builder.Services.AddScoped<UsuariosApiService>();
 
 var app = builder.Build();
 

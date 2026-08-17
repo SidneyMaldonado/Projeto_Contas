@@ -1,0 +1,93 @@
+@page "/carteiras/novo"
+@page "/carteiras/{Id:int}/editar"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject CarteirasApiService CarteirasApi
+
+<PageTitle>@Titulo</PageTitle>
+
+<h1 class="h3 mb-3">@Titulo</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_naoEncontrado)
+{
+    <div class="alert alert-warning" role="alert">Carteira não encontrada.</div>
+    <a class="btn btn-outline-secondary" href="/carteiras">Voltar</a>
+}
+else
+{
+    <div class="card shadow-sm" style="max-width: 640px;">
+        <div class="card-body">
+            <EditForm Model="_modelo" OnValidSubmit="SalvarAsync">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label" for="nome">Nome</label>
+                    <InputText id="nome" class="form-control" @bind-Value="_modelo.Nome" />
+                    <ValidationMessage For="() => _modelo.Nome" />
+                    <div class="form-text">De 3 a 50 caracteres.</div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@_salvando">
+                        @(_salvando ? "Salvando..." : "Salvar")
+                    </button>
+                    <a class="btn btn-outline-secondary" href="/carteiras">Cancelar</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private readonly AdicionarCarteiraDto _modelo = new();
+
+    private bool _naoEncontrado;
+    private bool _salvando;
+
+    private bool Editando => Id.HasValue;
+
+    private string Titulo => Editando ? "Editar carteira" : "Nova carteira";
+
+    protected override async Task CarregarAsync()
+    {
+        if (!Editando)
+            return;
+
+        var carteira = await CarteirasApi.ObterPorIdAsync(Id!.Value);
+        if (carteira is null)
+        {
+            _naoEncontrado = true;
+            return;
+        }
+
+        _modelo.Nome = carteira.Nome;
+    }
+
+    private async Task SalvarAsync()
+    {
+        _salvando = true;
+        LimparMensagem();
+
+        var resultado = Editando
+            ? await CarteirasApi.AtualizarAsync(Id!.Value, new AtualizarCarteiraDto { Nome = _modelo.Nome })
+            : await CarteirasApi.AdicionarAsync(_modelo);
+
+        _salvando = false;
+
+        if (resultado.Sucesso)
+        {
+            Navegacao.NavigateTo("/carteiras");
+            return;
+        }
+
+        DefinirErro(resultado.Erro);
+    }
+}
