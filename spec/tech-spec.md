@@ -120,7 +120,20 @@ Contas_Test ──► Contas_Api, Contas_Core, Contas_Db
 - Não há refresh token nem revogação — o token vale até expirar.
 - CORS não está configurado na API (nenhum middleware `UseCors`); hoje não há necessidade porque `Contas_Web` roda server-side (Blazor Server) e `Contas_App` é nativo, nenhum dos dois faz chamada cross-origin via browser.
 
-## 6. Observações / pontos de atenção conhecidos
+## 6. Execução em Docker
+
+Só a `Contas_Api` é containerizada. `Contas_Web` (Blazor Server) continua rodando fora do container e `Contas_App` (MAUI) não compila em Linux — o `Dockerfile` deliberadamente não copia nenhum dos dois, nem `Contas_Test`.
+
+- `Contas_Api/Dockerfile` — multi-stage (`sdk:10.0` para build/publish, `aspnet:10.0` para runtime), roda com o usuário não-root `app` (`$APP_UID`) e escuta em `8080` dentro do container.
+- **O contexto de build é a raiz da solução**, não a pasta da API, porque a API referencia `Contas_Core`, `Contas_Db` e `Contas_Contratos`: `docker build -f Contas_Api/Dockerfile -t contas-api:latest .`. Os `.csproj` são copiados antes do código-fonte para o `restore` aproveitar o cache de camadas.
+- `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false` + `LANG=pt_BR.UTF-8` são obrigatórios: a aplicação formata moeda e datas em pt-BR, e o modo invariant quebraria isso.
+- `docker-compose.yml` sobe o serviço `contas-api` e monta a connection string por interpolação das variáveis do `.env` (`DB_SERVER`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`). Não há `env_file` de propósito — assim a senha entra apenas dentro da connection string e não fica solta como variável de ambiente do container.
+- **Autenticação Windows (`Integrated Security`) não funciona em container Linux** — é obrigatório usar um login SQL Server (autenticação SQL) para o container alcançar o banco.
+- A porta publicada no host é `${API_PORT:-5210}`, não 8080: a 8080 está reservada pelo Windows/Hyper-V na máquina de desenvolvimento.
+- `.env` está no `.gitignore` (contém credenciais); `.env.example` é o modelo versionado. O `.dockerignore` bloqueia os dois na imagem, além de `bin/`, `obj/`, `.git/`, `spec/` e dos projetos que não entram no build.
+- O banco **não** é containerizado e continua sendo aplicado manualmente pelos scripts de `Contas_Db/Script/` (ver regra 8 da seção 4) — subir o container não cria nem atualiza tabelas.
+
+## 7. Observações / pontos de atenção conhecidos
 
 - `Contas_App` não persiste o token JWT após o login — qualquer chamada autenticada feita pelo App hoje falharia com 401 até isso ser implementado.
 - `ContasDbContext.OnConfiguring` tem uma connection string hardcoded como fallback (nome de servidor interno). Só é usada se a aplicação não configurar o `DbContext` via DI — a API sempre configura, então isso é inofensivo em produção, mas vale trocar por algo neutro se o projeto for aberto para fora.

@@ -1,0 +1,20 @@
+services:
+  contas-api:
+    build:
+      context: .
+      dockerfile: Contas_Api/Dockerfile
+    image: contas-api:latest
+    container_name: contas-api
+    restart: unless-stopped
+    ports:
+      # Porta 8080 do host esta reservada pelo Windows/Hyper-V nesta maquina,
+      # por isso o padrao no host e 5210. Ajuste via API_PORT no .env se quiser.
+      - "${API_PORT:-5210}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Development}"
+      # Autenticacao Windows (Integrated Security) NAO funciona em container Linux:
+      # e obrigatorio usar um login SQL Server.
+      ConnectionStrings__DefaultConnection: "Server=${DB_SERVER};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};TrustServerCertificate=True"
+    # Nao ha "env_file": o Compose ja le o .env do diretorio do projeto para
+    # interpolar ${VAR} acima. Assim as credenciais entram apenas dentro da
+    # connection string, e nao como variaveis soltas no container.

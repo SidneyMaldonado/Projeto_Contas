@@ -1,0 +1,39 @@
+# Saidas de build e cache
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+**/.vs/
+**/.vscode/
+
+# Controle de versao e metadados
+.git/
+.gitignore
+.gitattributes
+.github/
+.claude/
+
+# Projetos que nao entram na imagem da Api
+Contas_App/
+Contas_Web/
+Contas_Test/
+Contas_Biz/
+
+# Documentacao e arquivos de usuario
+spec/
+README.md
+**/*.user
+**/*.suo
+**/*.md
+**/*.http
+Projeto_Contas.slnLaunch.user
+
+# Docker
+**/Dockerfile
+**/.dockerignore
+docker-compose*.yml
+
+# Segredos: nunca devem entrar na imagem
+.env
+.env.local
+.env.example
