@@ -30,6 +30,15 @@ else
                 <DataAnnotationsValidator />
 
                 <div class="mb-3">
+                    <label class="form-label" for="tipo">Tipo</label>
+                    <InputSelect id="tipo" class="form-select" @bind-Value="_modelo.EhDivida">
+                        <option value="true">Dívida (a pagar)</option>
+                        <option value="false">Receita (a receber)</option>
+                    </InputSelect>
+                    <div class="form-text">Define se as parcelas geradas são a pagar ou a receber.</div>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label" for="nome">Nome</label>
                     <InputText id="nome" class="form-control" @bind-Value="_modelo.Nome" />
                     <ValidationMessage For="() => _modelo.Nome" />
@@ -42,7 +51,7 @@ else
                         {
                             <input id="conta" class="form-control" readonly
                                    value="@(_contas.FirstOrDefault(c => c.Id == _modelo.IdConta)?.Nome ?? "—")" />
-                            <div class="form-text">A API não permite trocar a conta de uma dívida existente.</div>
+                            <div class="form-text">A API não permite trocar a conta de um registro existente.</div>
                         }
                         else
                         {
@@ -62,7 +71,7 @@ else
                         {
                             <input id="categoria" class="form-control" readonly
                                    value="@(_categorias.FirstOrDefault(c => c.Id == _modelo.IdCategoria)?.Nome ?? "—")" />
-                            <div class="form-text">A API não permite trocar a categoria de uma dívida existente.</div>
+                            <div class="form-text">A API não permite trocar a categoria de um registro existente.</div>
                         }
                         else
                         {
@@ -117,7 +126,7 @@ else
                 @if (!Editando)
                 {
                     <div class="alert alert-info py-2" role="alert">
-                        As parcelas são geradas automaticamente pela API ao criar a dívida.
+                        As parcelas são geradas automaticamente pela API ao criar a @Rotulo.
                         A data do primeiro vencimento não pode estar no passado.
                     </div>
                 }
@@ -147,7 +156,9 @@ else
 
     private bool Editando => Id.HasValue;
 
-    private string Titulo => Editando ? "Editar dívida" : "Nova dívida";
+    private string Rotulo => _modelo.EhDivida ? "dívida" : "receita";
+
+    private string Titulo => Editando ? $"Editar {Rotulo}" : $"Nova {Rotulo}";
 
     protected override async Task CarregarAsync()
     {
@@ -176,6 +187,7 @@ else
         _modelo.Valor = divida.Valor;
         _modelo.Parcelas = divida.Parcelas;
         _modelo.DataPrimeiroVencimento = divida.DataPrimeiroVencimento;
+        _modelo.EhDivida = divida.EhDivida;
     }
 
     private async Task SalvarAsync()
@@ -208,7 +220,8 @@ else
                     DiaVencimento = _modelo.DiaVencimento,
                     DataPrimeiroVencimento = _modelo.DataPrimeiroVencimento,
                     Parcelas = _modelo.Parcelas,
-                    Valor = _modelo.Valor
+                    Valor = _modelo.Valor,
+                    EhDivida = _modelo.EhDivida
                 })
             : await DividasApi.AdicionarAsync(_modelo);
 

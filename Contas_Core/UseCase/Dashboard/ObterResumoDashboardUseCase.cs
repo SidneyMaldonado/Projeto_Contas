@@ -2,6 +2,7 @@ using Contas_Contratos.Dto;
 using Contas_Core.Converters;
 using Contas_Core.UseCase.Carteira;
 using Contas_Core.UseCase.Conta;
+using Contas_Core.UseCase.Divida;
 using Contas_Core.UseCase.Investimento;
 using Contas_Core.UseCase.Parcela;
 
@@ -15,17 +16,20 @@ public class ObterResumoDashboardUseCase
     private readonly ObterTodosParcelaUseCase _obterTodosParcela;
     private readonly ObterTodosInvestimentoUseCase _obterTodosInvestimento;
     private readonly ObterTodosCarteiraUseCase _obterTodosCarteira;
+    private readonly ObterTodosDividaUseCase _obterTodosDivida;
 
     public ObterResumoDashboardUseCase(
         ObterTodosContaUseCase obterTodosConta,
         ObterTodosParcelaUseCase obterTodosParcela,
         ObterTodosInvestimentoUseCase obterTodosInvestimento,
-        ObterTodosCarteiraUseCase obterTodosCarteira)
+        ObterTodosCarteiraUseCase obterTodosCarteira,
+        ObterTodosDividaUseCase obterTodosDivida)
     {
         _obterTodosConta = obterTodosConta;
         _obterTodosParcela = obterTodosParcela;
         _obterTodosInvestimento = obterTodosInvestimento;
         _obterTodosCarteira = obterTodosCarteira;
+        _obterTodosDivida = obterTodosDivida;
     }
 
     public async Task<DashboardResumoDto> ExecuteAsync(int idUsuario)
@@ -51,12 +55,24 @@ public class ObterResumoDashboardUseCase
             .Where(i => i.Ativo && minhasCarteirasIds.Contains(i.IdCarteira))
             .Sum(i => i.Quantidade * i.Cotacao);
 
+        // A parcela não sabe se veio de uma dívida ou de uma receita: quem carrega essa
+        // distinção é a dívida de origem (dm_divida).
+        var idsReceitas = (await _obterTodosDivida.ExecuteAsync())
+            .Where(d => !d.EhDivida)
+            .Select(d => d.Id)
+            .ToHashSet();
+
         return new DashboardResumoDto
         {
             SaldoTotalContas = saldoTotalContas,
             ProximasParcelas = ParcelaConverter.ToDto(parcelasNaoPagas.Take(QuantidadeProximasParcelas)),
             ValorTotalInvestido = valorTotalInvestido,
-            ValorTotalDividasAbertas = parcelasNaoPagas.Sum(p => p.Valor)
+            ValorTotalDividasAbertas = parcelasNaoPagas
+                .Where(p => !idsReceitas.Contains(p.IdDivida))
+                .Sum(p => p.Valor),
+            ValorTotalReceitasAbertas = parcelasNaoPagas
+                .Where(p => idsReceitas.Contains(p.IdDivida))
+                .Sum(p => p.Valor)
         };
     }
 }

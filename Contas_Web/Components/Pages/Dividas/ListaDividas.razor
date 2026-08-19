@@ -27,9 +27,22 @@ else
     <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
                  Placeholder="Filtrar por nome" UrlNovo="/dividas/novo" />
 
+    <div class="mb-3">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Tipo">
+            @foreach (var opcao in Tipos)
+            {
+                <button type="button"
+                        class="btn @(_tipo == opcao.Valor ? "btn-primary" : "btn-outline-primary")"
+                        @onclick="() => _tipo = opcao.Valor">
+                    @opcao.Rotulo
+                </button>
+            }
+        </div>
+    </div>
+
     @if (!Filtradas.Any())
     {
-        <p class="text-muted">Nenhuma dívida encontrada.</p>
+        <p class="text-muted">@MensagemVazia</p>
     }
     else
     {
@@ -38,6 +51,7 @@ else
                 <thead>
                     <tr>
                         <th>Nome</th>
+                        <th>Tipo</th>
                         <th>Conta</th>
                         <th>Categoria</th>
                         <th>Credor</th>
@@ -45,6 +59,7 @@ else
                         <th class="text-end">Parcelas</th>
                         <th>1º vencimento</th>
                         <th>Situação</th>
+                        <th></th>
                         <th class="text-end">Ações</th>
                     </tr>
                 </thead>
@@ -53,6 +68,11 @@ else
                     {
                         <tr>
                             <td>@divida.Nome</td>
+                            <td>
+                                <span class="badge @(divida.EhDivida ? "text-bg-danger" : "text-bg-success")">
+                                    @(divida.EhDivida ? "Dívida" : "Receita")
+                                </span>
+                            </td>
                             <td>@NomeConta(divida.IdConta)</td>
                             <td>@NomeCategoria(divida.IdCategoria)</td>
                             <td>@NomeCredor(divida.IdCredor)</td>
@@ -60,6 +80,12 @@ else
                             <td class="text-end">@divida.Parcelas</td>
                             <td>@Formato.Data(divida.DataPrimeiroVencimento)</td>
                             <td><Situacao Ativo="divida.Ativo" /></td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary text-nowrap"
+                                   href="@($"/parcelas?idDivida={divida.Id}")">
+                                    Ver parcelas
+                                </a>
+                            </td>
                             <td class="text-end">
                                 <AcoesLinha UrlEditar="@($"/dividas/{divida.Id}/editar")"
                                             Ativo="divida.Ativo"
@@ -87,6 +113,19 @@ else
     private string _filtro = string.Empty;
     private bool _mostrarInativos;
 
+    // null = ambos; true = só dívidas; false = só receitas.
+    private bool? _tipo;
+
+    private static readonly (string Rotulo, bool? Valor)[] Tipos =
+        [("Todos", null), ("Dívidas", true), ("Receitas", false)];
+
+    private string MensagemVazia => _tipo switch
+    {
+        true => "Nenhuma dívida encontrada.",
+        false => "Nenhuma receita encontrada.",
+        null => "Nenhum registro encontrado."
+    };
+
     protected override async Task CarregarAsync()
     {
         var dividas = DividasApi.ObterTodosAsync();
@@ -101,6 +140,7 @@ else
     }
 
     private IEnumerable<DividaDto> Filtradas => (_dividas ?? [])
+        .Where(d => _tipo is null || d.EhDivida == _tipo)
         .Where(d => _mostrarInativos || d.Ativo)
         .Where(d => Filtro.Corresponde(_filtro, d.Nome));
 

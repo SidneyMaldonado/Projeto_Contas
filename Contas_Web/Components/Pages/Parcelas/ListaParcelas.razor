@@ -10,6 +10,14 @@
 
 <h1 class="h3 mb-3">Parcelas</h1>
 
+@if (!Carregando && IdDivida is not null)
+{
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge text-bg-secondary">Dívida: @Nome(_dividas, IdDivida.Value)</span>
+        <a class="btn btn-sm btn-outline-secondary" href="/parcelas">Remover filtro</a>
+    </div>
+}
+
 <Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
 
 @if (Carregando)
@@ -25,7 +33,7 @@ else if (_parcelas is null)
 else
 {
     <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
-                 Placeholder="Filtrar por descrição" UrlNovo="/parcelas/novo" />
+                 Placeholder="Filtrar por descrição" UrlNovo="@UrlNovo" />
 
     @if (!Filtradas.Any())
     {
@@ -59,14 +67,10 @@ else
                             <td class="text-end">@Formato.Moeda(parcela.Valor)</td>
                             <td>@Formato.Data(parcela.DataVencimento)</td>
                             <td>
-                                @if (parcela.Pago)
-                                {
-                                    <span class="badge text-bg-success">Pago em @Formato.Data(parcela.DataPagamento)</span>
-                                }
-                                else
-                                {
-                                    <span class="badge text-bg-warning">Em aberto</span>
-                                }
+                                <PagamentoParcela Pago="parcela.Pago"
+                                                  DataPagamento="parcela.DataPagamento"
+                                                  OnPagar="data => PagarAsync(parcela.Id, data)"
+                                                  OnDesfazer="() => DesfazerPagamentoAsync(parcela.Id)" />
                             </td>
                             <td><Situacao Ativo="parcela.Ativo" /></td>
                             <td class="text-end">
@@ -86,6 +90,10 @@ else
 }
 
 @code {
+    /// <summary>Quando informado na querystring, restringe a lista às parcelas dessa dívida.</summary>
+    [SupplyParameterFromQuery(Name = "idDivida")]
+    public int? IdDivida { get; set; }
+
     private List<ParcelaDto>? _parcelas;
 
     private Dictionary<int, string> _dividas = [];
@@ -108,12 +116,25 @@ else
         _categorias = (await categorias)?.ToDictionary(c => c.Id, c => c.Nome) ?? [];
     }
 
+    /// <summary>Leva o filtro atual para o formulário, que já abre com a dívida escolhida.</summary>
+    private string UrlNovo => IdDivida is null ? "/parcelas/novo" : $"/parcelas/novo?idDivida={IdDivida}";
+
     private IEnumerable<ParcelaDto> Filtradas => (_parcelas ?? [])
+        .Where(p => IdDivida is null || p.IdDivida == IdDivida)
         .Where(p => _mostrarInativos || p.Ativo)
         .Where(p => Filtro.Corresponde(_filtro, p.Descricao));
 
     private static string Nome(Dictionary<int, string> origem, int id) =>
         origem.TryGetValue(id, out var nome) ? nome : $"#{id}";
+
+    private async Task PagarAsync(int id, DateTime dataPagamento)
+        => await AplicarResultadoAsync(
+            await ParcelasApi.PagarAsync(id, new PagarParcelaDto { DataPagamento = dataPagamento }),
+            "Pagamento registrado.");
+
+    private async Task DesfazerPagamentoAsync(int id)
+        => await AplicarResultadoAsync(
+            await ParcelasApi.DesfazerPagamentoAsync(id), "Pagamento desfeito.");
 
     private async Task InativarAsync(int id)
         => await AplicarResultadoAsync(await ParcelasApi.InativarAsync(id), "Parcela inativada.");

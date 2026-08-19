@@ -1,0 +1,113 @@
+@* Coluna "Pagamento" da listagem de parcelas: mostra o estado atual e, na própria
+   linha, as ações de pagar e desfazer. Tudo inline pelo mesmo motivo do AcoesLinha:
+   um confirm()/prompt() do JS bloquearia o circuito do Blazor Server. *@
+
+@if (_pagando)
+{
+    <div class="d-inline-flex align-items-center gap-2">
+        <input type="date" class="form-control form-control-sm" style="width: 9.5rem;"
+               disabled="@_executando" @bind="_dataPagamento" />
+
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-success" disabled="@_executando"
+                    @onclick="ConfirmarPagamentoAsync">
+                Confirmar
+            </button>
+            <button type="button" class="btn btn-outline-secondary" disabled="@_executando"
+                    @onclick="() => _pagando = false">
+                Cancelar
+            </button>
+        </div>
+    </div>
+}
+else if (_desfazendo)
+{
+    <div class="d-inline-flex align-items-center gap-2">
+        <span class="small text-nowrap">Desfazer pagamento?</span>
+
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-warning" disabled="@_executando"
+                    @onclick="ConfirmarDesfazerAsync">
+                Sim
+            </button>
+            <button type="button" class="btn btn-outline-secondary" disabled="@_executando"
+                    @onclick="() => _desfazendo = false">
+                Não
+            </button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-inline-flex align-items-center gap-2">
+        @if (Pago)
+        {
+            <span class="badge text-bg-success">Pago em @Formato.Data(DataPagamento)</span>
+            <button type="button" class="btn btn-sm btn-outline-warning" @onclick="AbrirDesfazer">
+                Desfazer
+            </button>
+        }
+        else
+        {
+            <span class="badge text-bg-warning">Em aberto</span>
+            <button type="button" class="btn btn-sm btn-outline-success" @onclick="AbrirPagamento">
+                Pagar
+            </button>
+        }
+    </div>
+}
+
+@code {
+    private bool _pagando;
+    private bool _desfazendo;
+    private bool _executando;
+
+    // Sugerida na abertura; o usuário troca quando o pagamento não foi hoje.
+    private DateTime _dataPagamento = DateTime.Today;
+
+    [Parameter] public bool Pago { get; set; }
+
+    [Parameter] public DateTime? DataPagamento { get; set; }
+
+    [Parameter] public EventCallback<DateTime> OnPagar { get; set; }
+
+    [Parameter] public EventCallback OnDesfazer { get; set; }
+
+    private void AbrirPagamento()
+    {
+        _dataPagamento = DataPagamento ?? DateTime.Today;
+        _pagando = true;
+    }
+
+    private void AbrirDesfazer() => _desfazendo = true;
+
+    private async Task ConfirmarPagamentoAsync()
+    {
+        _executando = true;
+
+        try
+        {
+            await OnPagar.InvokeAsync(_dataPagamento);
+        }
+        finally
+        {
+            _executando = false;
+            _pagando = false;
+        }
+    }
+
+    private async Task ConfirmarDesfazerAsync()
+    {
+        _executando = true;
+
+        try
+        {
+            await OnDesfazer.InvokeAsync();
+        }
+        finally
+        {
+            _executando = false;
+            _desfazendo = false;
+        }
+    }
+}

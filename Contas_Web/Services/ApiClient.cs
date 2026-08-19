@@ -32,6 +32,9 @@ public class ApiClient(HttpClient httpClient, AuthSession authSession)
     public Task<ApiResultado> PatchAsync(string url) =>
         EnviarAsync<object?>(HttpMethod.Patch, url, null);
 
+    public Task<ApiResultado> PatchAsync<TCorpo>(string url, TCorpo corpo) =>
+        EnviarAsync(HttpMethod.Patch, url, corpo);
+
     public Task<ApiResultado> ExcluirAsync(string url) =>
         EnviarAsync<object?>(HttpMethod.Delete, url, null);
 

@@ -20,7 +20,7 @@
 else if (_naoEncontrado)
 {
     <div class="alert alert-warning" role="alert">Parcela não encontrada.</div>
-    <a class="btn btn-outline-secondary" href="/parcelas">Voltar</a>
+    <a class="btn btn-outline-secondary" href="@UrlLista">Voltar</a>
 }
 else
 {
@@ -89,15 +89,15 @@ else
                     <button type="submit" class="btn btn-primary" disabled="@_salvando">
                         @(_salvando ? "Salvando..." : "Salvar")
                     </button>
-                    <a class="btn btn-outline-secondary" href="/parcelas">Cancelar</a>
+                    <a class="btn btn-outline-secondary" href="@UrlLista">Cancelar</a>
                 </div>
             </EditForm>
 
             @if (Editando)
             {
                 <p class="text-muted small mt-3 mb-0">
-                    Pagar e desfazer pagamento continuam só na API
-                    (PATCH api/parcelas/@Id/pagar), fora do escopo deste formulário.
+                    Pagar e desfazer pagamento ficam na
+                    <a href="@UrlLista">listagem de parcelas</a>, não neste formulário.
                 </p>
             }
         </div>
@@ -106,6 +106,10 @@ else
 
 @code {
     [Parameter] public int? Id { get; set; }
+
+    /// <summary>Dívida sugerida ao criar (vem da listagem de parcelas já filtrada).</summary>
+    [SupplyParameterFromQuery(Name = "idDivida")]
+    public int? IdDivida { get; set; }
 
     private readonly AdicionarParcelaDto _modelo = new() { DataVencimento = DateTime.Today };
 
@@ -120,6 +124,9 @@ else
 
     private string Titulo => Editando ? "Editar parcela" : "Nova parcela";
 
+    /// <summary>Volta para a lista mantendo o filtro por dívida, quando veio de um.</summary>
+    private string UrlLista => IdDivida is null ? "/parcelas" : $"/parcelas?idDivida={IdDivida}";
+
     protected override async Task CarregarAsync()
     {
         var dividas = DividasApi.ObterTodosAsync();
@@ -131,7 +138,13 @@ else
         _categorias = (await categorias)?.Where(c => c.Ativo).OrderBy(c => c.Nome).ToList() ?? [];
 
         if (!Editando)
+        {
+            // Só sugere a dívida se ela estiver entre as opções do select (as inativas ficam de fora).
+            if (_dividas.Any(d => d.Id == IdDivida))
+                _modelo.IdDivida = IdDivida!.Value;
+
             return;
+        }
 
         var parcela = await ParcelasApi.ObterPorIdAsync(Id!.Value);
         if (parcela is null)
@@ -178,7 +191,7 @@ else
 
         if (resultado.Sucesso)
         {
-            Navegacao.NavigateTo("/parcelas");
+            Navegacao.NavigateTo(UrlLista);
             return;
         }
 

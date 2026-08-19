@@ -12,5 +12,9 @@ public class DividaDto
     public DateTime DataPrimeiroVencimento { get; set; }
     public int Parcelas { get; set; }
     public decimal Valor { get; set; }
+
+    /// <summary>true = dívida (a pagar); false = receita (a receber).</summary>
+    public bool EhDivida { get; set; } = true;
+
     public bool Ativo { get; set; }
 }

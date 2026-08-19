@@ -18,6 +18,12 @@ public class ParcelasApiService(ApiClient api)
     public Task<ApiResultado> AtualizarAsync(int id, AtualizarParcelaDto dto) =>
         api.AtualizarAsync($"{Recurso}/{id}", dto);
 
+    public Task<ApiResultado> PagarAsync(int id, PagarParcelaDto dto) =>
+        api.PatchAsync($"{Recurso}/{id}/pagar", dto);
+
+    public Task<ApiResultado> DesfazerPagamentoAsync(int id) =>
+        api.PatchAsync($"{Recurso}/{id}/desfazer-pagamento");
+
     public Task<ApiResultado> InativarAsync(int id) =>
         api.PatchAsync($"{Recurso}/{id}/inativar");
 

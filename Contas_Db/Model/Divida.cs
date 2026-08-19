@@ -59,6 +59,11 @@ public class Divida : ISoftDelete
     [Column("nr_valor", TypeName = "numeric(10,2)")]
     public decimal Valor { get; set; }
 
+    /// <summary>true = dívida (a pagar); false = receita (a receber).</summary>
+    [Required]
+    [Column("dm_divida")]
+    public bool EhDivida { get; set; } = true;
+
     [Required]
     [Column("dm_ativo")]
     public bool Ativo { get; set; }

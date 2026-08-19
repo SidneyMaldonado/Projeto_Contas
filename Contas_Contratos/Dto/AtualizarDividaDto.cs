@@ -24,4 +24,7 @@ public class AtualizarDividaDto
 
     [Required]
     public decimal Valor { get; set; }
+
+    /// <summary>true = dívida (a pagar); false = receita (a receber). Omitido, vale dívida.</summary>
+    public bool EhDivida { get; set; } = true;
 }

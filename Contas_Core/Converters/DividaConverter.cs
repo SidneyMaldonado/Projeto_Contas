@@ -16,6 +16,7 @@ public static class DividaConverter
         DataPrimeiroVencimento = dto.DataPrimeiroVencimento,
         Parcelas = dto.Parcelas,
         Valor = dto.Valor,
+        EhDivida = dto.EhDivida,
         Ativo = true
     };
 
@@ -28,6 +29,7 @@ public static class DividaConverter
         entity.DataPrimeiroVencimento = dto.DataPrimeiroVencimento;
         entity.Parcelas = dto.Parcelas;
         entity.Valor = dto.Valor;
+        entity.EhDivida = dto.EhDivida;
     }
 
     public static DividaDto ToDto(Divida entity) => new()
@@ -42,6 +44,7 @@ public static class DividaConverter
         DataPrimeiroVencimento = entity.DataPrimeiroVencimento,
         Parcelas = entity.Parcelas,
         Valor = entity.Valor,
+        EhDivida = entity.EhDivida,
         Ativo = entity.Ativo
     };
 
