@@ -108,8 +108,10 @@ Contas_Test ──► Contas_Api, Contas_Core, Contas_Db
 ### 3.6 `Contas_App` — MAUI
 
 - `Pages/*.xaml` + code-behind — **sem MVVM framework** (não há `CommunityToolkit.Mvvm`, nem pasta `ViewModels`). Lógica de UI e chamada de serviço ficam direto no `.xaml.cs`.
-- Navegação via Shell (`AppShell.xaml`), rotas registradas por página.
-- `Services/AuthApiService.cs` — chamado pelas páginas de login/registro. **Atenção:** hoje o token retornado pelo login não é persistido em `SecureStorage`/`Preferences` (só e-mail/senha são, para biometria via `CredentialStore`) e nenhuma chamada HTTP no App anexa `Authorization`. Qualquer novo endpoint autenticado chamado pelo App vai falhar com 401 até isso ser resolvido.
+- Navegação via Shell (`AppShell.xaml`). `LoginPage` e `RegisterPage` são `ShellContent` de raiz; `MainPage` (saldos) e `ContasPage` (mês a pagar/a receber) ficam dentro de um `<Tab Route="Home">`, que no Android rende deslize horizontal entre as duas. A rota da Home é `//Home/MainPage`.
+- `Services/AuthApiService.cs` — chamado pelas páginas de login/registro. O token volta do login e é guardado em `AppSession` (memória); `ApiClient` o anexa como `Bearer` em cada requisição. **O que não é persistido é a sessão:** `SecureStorage` guarda só e-mail/senha para a biometria (`CredentialStore`), então reabrir o app exige login de novo.
+- `Services/ResumoMensalService.cs` — cruza `GET api/parcelas` com `GET api/dividas` em memória para montar o quadro do mês corrente, porque a API não expõe esse resumo. Mesma lógica do `QuadroAnualParcelas` do `Contas_Web`, incluindo a regra de que a classificação a pagar/a receber vem de `DividaDto.EhDivida` e a parcela órfã entra como a pagar.
+- `Services/SaldosImagemService.cs` — desenha o quadro de saldos como PNG com `Microsoft.Maui.Graphics` para compartilhamento via `Share.RequestAsync`. O export service tem namespace diferente por plataforma (`#if WINDOWS`).
 
 ### 3.7 `Contas_Test` — testes
 
@@ -160,6 +162,7 @@ Só a `Contas_Api` é containerizada. `Contas_Web` (Blazor Server) continua roda
 - **`ApplyUpdate` dos Converters sobrescreve as colunas de imagem** (`img_conta`, `img_categoria`, `img_logo`, imagem do usuário) com o que vier no DTO. Os formulários do `Contas_Web` não editam imagem, mas precisam devolver os bytes atuais no `PUT` — caso contrário a imagem existente é apagada. Qualquer novo cliente que chame `PUT` precisa do mesmo cuidado.
 - `AtualizarDividaDto` não tem `IdConta` nem `IdCategoria` (ao contrário de `AdicionarDividaDto`), então não é possível trocar a conta ou a categoria de uma dívida existente — o formulário mostra os dois campos como somente-leitura na edição.
 - `OperacaoDto` não tem nenhum campo de texto (nome/descrição). A listagem de Operações filtra pelo **nome do investimento**, resolvido a partir de `IdInvestimento`.
-- `Contas_App` não persiste o token JWT após o login — qualquer chamada autenticada feita pelo App hoje falharia com 401 até isso ser implementado.
+- `Contas_App` guarda o token JWT só em memória (`AppSession`): dentro de uma execução as chamadas autenticadas funcionam, mas fechar o app perde a sessão e exige login de novo.
+- A aba `Contas` do `Contas_App` repete o cruzamento parcelas × dívidas em memória do quadro anual do `Contas_Web` — são **dois** clientes esperando o mesmo endpoint de agregação que ainda não existe.
 - `ContasDbContext.OnConfiguring` tem uma connection string hardcoded como fallback (nome de servidor interno). Só é usada se a aplicação não configurar o `DbContext` via DI — a API sempre configura, então isso é inofensivo em produção, mas vale trocar por algo neutro se o projeto for aberto para fora.
 - Há pastas vazias remanescentes em `Contas_Core` (`Dto/`, `NovaPasta/`) que não são rastreadas pelo Git — podem ser removidas com segurança quando notadas no Explorador de Soluções.

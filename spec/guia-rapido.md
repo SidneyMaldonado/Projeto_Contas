@@ -40,19 +40,25 @@ Cliente mobile/desktop. Targets: `net10.0-android`, `-ios`, `-maccatalyst`, `-wi
 ```
 Contas_App/
 ├── App.xaml(.cs)            janela 390x844 (simula celular no Windows)
-├── AppShell.xaml            Shell com 3 rotas: LoginPage, RegisterPage, MainPage
+├── AppShell.xaml            LoginPage, RegisterPage + Tab "Home" (MainPage | ContasPage)
 ├── MauiProgram.cs           único ponto de DI
-├── MainPage.xaml(.cs)       tabela de contas + saldo editável em lote
-├── Pages/                   LoginPage, RegisterPage (.xaml + code-behind)
+├── MainPage.xaml(.cs)       tabela de contas + saldo editável em lote + compartilhar
+├── Pages/                   LoginPage, RegisterPage, ContasPage (.xaml + code-behind)
 └── Services/
-    ├── ApiConfig.cs         BaseUrl (10.0.2.2 no Android, localhost no resto)
-    ├── AppSession.cs        token JWT + usuário logado (memória, enquanto o app vive)
-    ├── ApiClient.cs         HttpClient único, Bearer por requisição, ApiResultado
-    ├── AuthApiService.cs    login/registro (não precisa de token)
-    ├── ContasApiService.cs  mapeia api/contas/*
-    ├── ContaSaldoItem.cs    item de tela (INotifyPropertyChanged)
-    └── CredentialStore.cs   e-mail/senha em SecureStorage para biometria
+    ├── ApiConfig.cs           BaseUrl (10.0.2.2 no Android, localhost no resto)
+    ├── AppSession.cs          token JWT + usuário logado (memória, enquanto o app vive)
+    ├── ApiClient.cs           HttpClient único, Bearer por requisição, ApiResultado
+    ├── AuthApiService.cs      login/registro (não precisa de token)
+    ├── ContasApiService.cs    mapeia api/contas/*
+    ├── ParcelasApiService.cs  mapeia api/parcelas (só ObterTodos)
+    ├── DividasApiService.cs   mapeia api/dividas (só ObterTodos)
+    ├── ResumoMensalService.cs cruza parcelas × dívidas → quadro do mês
+    ├── SaldosImagemService.cs desenha o quadro de saldos como PNG
+    ├── ContaSaldoItem.cs      item de tela (INotifyPropertyChanged)
+    └── CredentialStore.cs     e-mail/senha em SecureStorage para biometria
 ```
+
+**Navegação:** `LoginPage` e `RegisterPage` são `ShellContent` de raiz; `MainPage` e `ContasPage` ficam dentro de um `<Tab Route="Home">`, o que no Android dá **deslize horizontal** entre as duas. Por isso a rota da Home é **`//Home/MainPage`**, não `//MainPage` — navegação nova precisa do caminho completo.
 
 **Regras do App:**
 
@@ -63,6 +69,10 @@ Contas_App/
 - **Objetos de tela ficam em `Services/`** (ex.: `ContaSaldoItem`) implementando `INotifyPropertyChanged`, com `CollectionView` + `DataTemplate` tipado (`x:DataType`).
 - **Entrada numérica aceita vírgula e ponto** — o teclado numérico do Android nem sempre oferece a vírgula.
 - **Operação em lote valida tudo antes de enviar** (ex.: salvar saldos): um item inválido não pode deixar os outros irem pela metade.
+- **Botão que promete leitura do servidor lê o servidor**, e **escrita termina relendo** em vez de recalcular o que foi digitado (ver `commit_85afc05`, item 1 — foi exatamente esse o bug).
+- **Lista dentro de `ScrollView` usa `BindableLayout` sobre `VerticalStackLayout`**, não `CollectionView` — `CollectionView` não mede direito aninhado em `ScrollView`.
+- **Imagem gerada em código usa `Microsoft.Maui.Graphics`** (não há SkiaSharp no projeto). O export service muda de namespace por plataforma (`PlatformBitmapExportService` × `W2DBitmapExportService`), então precisa de `#if WINDOWS`; e `Font` exige alias por ambiguidade com `Microsoft.Maui.Font`.
+- **Relatório que a API não agrega é cruzado no cliente**, replicando a regra já usada no `Contas_Web` (a classificação a pagar/a receber vem de `DividaDto.EhDivida`, nunca da parcela).
 - **O token não é persistido** entre execuções (só e-mail/senha, para biometria). Reabrir o app exige login.
 
 ---
@@ -313,7 +323,11 @@ Problemas reais já identificados no código atual. Ler antes de mexer nas área
 ### Contas_App
 
 - **O token não sobrevive ao fechamento do app.** `AppSession` guarda token e usuário só em memória; o que é persistido (`SecureStorage`) são e-mail/senha para a biometria. Reabrir o app exige passar pelo login de novo.
-- **Só a `MainPage` consome a API autenticada** hoje (contas/saldos). Tela nova precisa do seu `XApiService` registrado no `MauiProgram`.
+- **Tela nova precisa do seu `XApiService` registrado no `MauiProgram`** — e da página também (`AddTransient<XPage>()`), senão o DI não resolve o construtor.
+- **A aba `Contas` depende de `GET api/Dividas`**, que hoje responde 500 por dados legados (ver "Quebrado hoje", acima). Enquanto isso não for resolvido, a aba cai na mensagem de erro — não é bug da tela.
+- **A aba `Contas` e o quadro anual do Web fazem o mesmo cruzamento** parcelas × dívidas em memória. Se um endpoint de agregação for criado na API, os dois passam a ser clientes dele.
+- **A imagem compartilhada reflete a tela, não o banco** — é montada da lista em memória da `MainPage`.
+- **Não validado em dispositivo** (`commit_85afc05`): falta confirmar que a faixa de abas aparece com `Shell.NavBarIsVisible="False"` e que o login entra pela rota `//Home/MainPage`.
 
 ### Manutenção
 
@@ -364,5 +378,7 @@ Problemas reais já identificados no código atual. Ler antes de mexer nas área
 | 36 | `d8fc454` | 2026-08-21 | Parcelas ordenadas por vencimento, **filtro por dívida persistido** e **quadro anual** (`/parcelas/anual`). |
 | 37 | `25c1637` | 2026-08-21 | Documenta `d8fc454` em `spec/`. |
 | 38 | `ce561ef` | 2026-09-21 | **`MainPage` do app mostra e edita saldos:** `ApiConfig`, `AppSession`, `ApiClient`, `ContasApiService`, `ContaSaldoItem`; token guardado no login. |
+| 39 | `5385bb4` | 2026-09-21 | Cria `spec/guia-rapido.md` e renomeia o tech-spec para `spec/arquitetura-detalhada.md`. |
+| 40 | `85afc05` | 2026-09-21 | **App:** separa Recarregar de Editar Saldos (o botão não recarregava), releitura após salvar, **compartilhar saldos como PNG** (`SaldosImagemService`) e **aba `Contas`** com o mês a pagar/a receber, alcançada por deslize (`ResumoMensalService`, `Tab` no Shell, rota `//Home/MainPage`). |
 
 > Detalhe completo de cada commit em `spec/commit_<hash>.md`.
