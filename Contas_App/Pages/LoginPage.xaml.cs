@@ -117,7 +117,7 @@ public partial class LoginPage : ContentPage
         if (offerBiometricSetup && !CredentialStore.IsEnabled)
             await OfferBiometricSetupAsync(email, senha);
 
-        await Shell.Current.GoToAsync("//MainPage");
+        await Shell.Current.GoToAsync("//Home/MainPage");
     }
 
     private async Task OfferBiometricSetupAsync(string email, string senha)

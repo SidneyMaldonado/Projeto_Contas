@@ -29,6 +29,10 @@
 
     <Color x:Key="Gold">#D4AF37</Color>
 
+    <!-- Quadro mensal: laranja para o que sai, verde para o que entra. -->
+    <Color x:Key="Despesa">#E08A3C</Color>
+    <Color x:Key="Receita">#5BBF7A</Color>
+
     <SolidColorBrush x:Key="GoldBrush" Color="{StaticResource Gold}"/>
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>

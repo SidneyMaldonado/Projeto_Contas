@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Contas_App.Services;
 using Plugin.Fingerprint.Abstractions;
 
@@ -97,7 +97,7 @@ public partial class RegisterPage : ContentPage
         }
 
         await OfferBiometricSetupAsync(email, senha);
-        await Shell.Current.GoToAsync("//MainPage");
+        await Shell.Current.GoToAsync("//Home/MainPage");
     }
 
     private async Task OfferBiometricSetupAsync(string email, string senha)

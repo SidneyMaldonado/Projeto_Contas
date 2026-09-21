@@ -24,7 +24,8 @@ public partial class MainPage : ContentPage
         await CarregarContasAsync();
     }
 
-    private async Task CarregarContasAsync()
+    /// <summary>Lê os saldos da API. Retorna false quando a requisição falha.</summary>
+    private async Task<bool> CarregarContasAsync()
     {
         EsconderStatus();
         SetBusy(true);
@@ -34,7 +35,7 @@ public partial class MainPage : ContentPage
         if (resumo is null)
         {
             MostrarStatus("Não foi possível carregar as contas. Tente novamente.", erro: true);
-            return;
+            return false;
         }
 
         _contas.Clear();
@@ -43,13 +44,17 @@ public partial class MainPage : ContentPage
 
         AtualizarTotal();
         SairDaEdicao();
+        return true;
     }
 
-    private async void OnAtualizarSaldosClicked(object? sender, EventArgs e)
+    private async void OnRecarregarClicked(object? sender, EventArgs e) =>
+        await CarregarContasAsync();
+
+    private void OnEditarSaldosClicked(object? sender, EventArgs e)
     {
         if (_contas.Count == 0)
         {
-            await CarregarContasAsync();
+            MostrarStatus("Nenhuma conta para editar. Use Recarregar.", erro: true);
             return;
         }
 
@@ -58,8 +63,42 @@ public partial class MainPage : ContentPage
         foreach (var conta in _contas)
             conta.IniciarEdicao();
 
-        AtualizarSaldosButton.IsVisible = false;
+        BotoesExibicao.IsVisible = false;
         SalvarButton.IsVisible = true;
+    }
+
+    private async void OnCompartilharClicked(object? sender, EventArgs e)
+    {
+        if (_contas.Count == 0)
+        {
+            MostrarStatus("Nenhuma conta para compartilhar. Use Recarregar.", erro: true);
+            return;
+        }
+
+        EsconderStatus();
+        SetBusy(true);
+
+        try
+        {
+            // Sempre o mesmo arquivo no cache: o anterior já foi entregue ao app de destino
+            // e não há motivo para acumular PNGs a cada compartilhamento.
+            var caminho = Path.Combine(FileSystem.CacheDirectory, "vida-dura.png");
+            await File.WriteAllBytesAsync(caminho, SaldosImagemService.GerarPng(_contas));
+
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = SaldosImagemService.Titulo,
+                File = new ShareFile(caminho)
+            });
+        }
+        catch (Exception ex)
+        {
+            MostrarStatus($"Não foi possível compartilhar: {ex.Message}", erro: true);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
     }
 
     private async void OnSalvarClicked(object? sender, EventArgs e)
@@ -87,7 +126,11 @@ public partial class MainPage : ContentPage
 
         AtualizarTotal();
         SairDaEdicao();
-        MostrarStatus("Saldos atualizados com sucesso.", erro: false);
+
+        // Relê da API: o que fica na tela é o que o banco gravou, não o que foi digitado.
+        // Se a releitura falhar, ela mesma exibe o erro e a mensagem de sucesso é omitida.
+        if (await CarregarContasAsync())
+            MostrarStatus("Saldos atualizados com sucesso.", erro: false);
     }
 
     private void SairDaEdicao()
@@ -95,7 +138,7 @@ public partial class MainPage : ContentPage
         foreach (var conta in _contas)
             conta.EncerrarEdicao();
 
-        AtualizarSaldosButton.IsVisible = true;
+        BotoesExibicao.IsVisible = true;
         SalvarButton.IsVisible = false;
     }
 
@@ -106,7 +149,9 @@ public partial class MainPage : ContentPage
     {
         LoadingIndicator.IsVisible = busy;
         LoadingIndicator.IsRunning = busy;
-        AtualizarSaldosButton.IsEnabled = !busy;
+        RecarregarButton.IsEnabled = !busy;
+        EditarSaldosButton.IsEnabled = !busy;
+        CompartilharButton.IsEnabled = !busy;
         SalvarButton.IsEnabled = !busy;
     }
 

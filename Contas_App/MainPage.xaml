@@ -122,12 +122,35 @@
                    HorizontalTextAlignment="Center"
                    IsVisible="False" />
 
-            <Button x:Name="AtualizarSaldosButton"
-                    Text="Atualizar Saldos"
-                    BackgroundColor="{StaticResource Gold}"
-                    TextColor="Black"
-                    FontAttributes="Bold"
-                    Clicked="OnAtualizarSaldosClicked" />
+            <Grid x:Name="BotoesExibicao" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                <Button x:Name="RecarregarButton"
+                        Text="Recarregar"
+                        BackgroundColor="Transparent"
+                        BorderColor="{StaticResource Gold}"
+                        BorderWidth="2"
+                        TextColor="{StaticResource Gold}"
+                        FontAttributes="Bold"
+                        Clicked="OnRecarregarClicked" />
+
+                <Button Grid.Column="1"
+                        x:Name="EditarSaldosButton"
+                        Text="Editar Saldos"
+                        BackgroundColor="{StaticResource Gold}"
+                        TextColor="Black"
+                        FontAttributes="Bold"
+                        Clicked="OnEditarSaldosClicked" />
+
+                <Button Grid.Row="1"
+                        Grid.ColumnSpan="2"
+                        x:Name="CompartilharButton"
+                        Text="Compartilhar"
+                        BackgroundColor="Transparent"
+                        BorderColor="{StaticResource Gold}"
+                        BorderWidth="2"
+                        TextColor="{StaticResource Gold}"
+                        FontAttributes="Bold"
+                        Clicked="OnCompartilharClicked" />
+            </Grid>
 
             <Button x:Name="SalvarButton"
                     Text="Salvar"
