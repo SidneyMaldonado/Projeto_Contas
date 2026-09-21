@@ -1,6 +1,10 @@
-# Tech Spec — Projeto_Contas
+# Arquitetura detalhada — Projeto_Contas
 
-> Documento de referência da arquitetura, convenções e regras de desenvolvimento do projeto. Escrito a partir do estado atual do código (agosto/2026). Atualize este arquivo quando decisões estruturais mudarem.
+> Documento de referência da arquitetura, convenções e regras de desenvolvimento do projeto — a versão longa, com o porquê de cada decisão. Escrito a partir do estado atual do código (agosto/2026). Atualize este arquivo quando decisões estruturais mudarem.
+>
+> Para consulta rápida (regras em tabela, comandos, histórico de commits), ver [`guia-rapido.md`](guia-rapido.md).
+>
+> Este arquivo se chamava `tech-spec.md` até 2026-09-21 — os documentos em `spec/commit_*.md` ainda o citam por esse nome.
 
 ## 1. Visão geral
 

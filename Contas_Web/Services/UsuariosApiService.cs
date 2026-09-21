@@ -8,7 +8,7 @@ public class UsuariosApiService(ApiClient api)
 
     /// <remarks>
     /// A API não filtra por dono nem tem papel de administrador: este endpoint devolve
-    /// todos os usuários do sistema. Registrado como ponto de atenção no tech-spec.
+    /// todos os usuários do sistema. Registrado como ponto de atenção em spec/guia-rapido.md.
     /// </remarks>
     public Task<IEnumerable<UsuarioDto>?> ObterTodosAsync() =>
         api.ObterAsync<IEnumerable<UsuarioDto>>(Recurso);
