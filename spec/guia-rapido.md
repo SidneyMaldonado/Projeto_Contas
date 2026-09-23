@@ -45,7 +45,7 @@ Contas_App/
 ├── MainPage.xaml(.cs)       tabela de contas + saldo editável em lote + compartilhar
 ├── Pages/                   LoginPage, RegisterPage, ContasPage (.xaml + code-behind)
 └── Services/
-    ├── ApiConfig.cs           BaseUrl (10.0.2.2 no Android, localhost no resto)
+    ├── ApiConfig.cs           BaseUrl (servidor lab/fin_back no Android, localhost no resto)
     ├── AppSession.cs          token JWT + usuário logado (memória, enquanto o app vive)
     ├── ApiClient.cs           HttpClient único, Bearer por requisição, ApiResultado
     ├── AuthApiService.cs      login/registro (não precisa de token)
@@ -184,7 +184,7 @@ Contas_Web/
 - **Dois cuidados em formulário novo:**
   1. Não usar `Adicionar<X>Dto` como `Model` do `EditForm` se algum `[Required]` dele não tiver input na tela — o submit é barrado em silêncio. Use modelo próprio (ver `FormHistorico`, `FormUsuario`).
   2. `InputSelect` de FK tem "Selecione..." = `0`; checar `== 0` explicitamente no `SalvarAsync`.
-- **Endereço da API** vem de `Api:BaseUrl` no `appsettings.json` (padrão `http://localhost:5210/`).
+- **Endereço da API** vem de `Api:BaseUrl`: `appsettings.Development.json` → `http://localhost:5210/`; `appsettings.json` (publicação) → `http://lab.miltecti.com.br/fin_back/`. **Sempre com barra final**, senão o `HttpClient` descarta o `/fin_back`.
 
 ---
 
@@ -209,7 +209,23 @@ dotnet run   --project Contas_Api/Contas_Api.csproj --launch-profile https
 dotnet publish Contas_Api/Contas_Api.csproj -c Release -o ./publish/api
 ```
 
-Swagger (só em Development): `http://localhost:5210/swagger` · OpenAPI: `/openapi/v1.json`
+Swagger: `http://localhost:5210/swagger` · OpenAPI: `/openapi/v1.json` (fora de Development, só com `Swagger:Habilitado: true`)
+
+**Desenvolvimento × publicação** (detalhe em `commit_6af6f90`):
+
+| | Desenvolvimento | Publicação |
+|---|---|---|
+| Endereço | `http://localhost:5210` | `http://lab.miltecti.com.br/fin_back/` |
+| Ambiente | `Development` (`launchSettings.json`) | `Production` (`web.config` gerado pelo perfil) |
+| Configuração | `appsettings.json` + `appsettings.Development.json` | `appsettings.json` |
+| Banco | `Integrated Security` | login SQL `user_db_dev` |
+| `PathBase` | vazio | `/fin_back` |
+
+Publicar no servidor: no Visual Studio, **Publicar** com o perfil `FTPLabFin_Back` (FTP para `MS208`, pasta `/laboratorio/fin_back`). O `.pubxml` fica fora do git; ele deve ter `<EnvironmentName>Production</EnvironmentName>`. O `dotnet publish` não publica por FTP — pela linha de comando, gere a pasta e envie o conteúdo por um cliente FTP:
+
+```bash
+dotnet publish Contas_Api/Contas_Api.csproj -c Release -p:EnvironmentName=Production -o ./publish/api
+```
 
 ### Contas_Web (Blazor Server — porta 5095)
 
@@ -220,7 +236,7 @@ dotnet run   --project Contas_Web/Contas_Web.csproj --launch-profile https   # h
 dotnet publish Contas_Web/Contas_Web.csproj -c Release -o ./publish/web
 ```
 
-> A API precisa estar no ar antes do Web (`Api:BaseUrl` no `appsettings.json`).
+> A API precisa estar no ar antes do Web (`Api:BaseUrl` no `appsettings.Development.json` local, no `appsettings.json` publicado).
 
 ### Contas_App (MAUI)
 
@@ -238,7 +254,7 @@ dotnet publish Contas_App/Contas_App.csproj -f net10.0-android -c Release       
 dotnet publish Contas_App/Contas_App.csproj -f net10.0-windows10.0.19041.0 -c Release
 ```
 
-> No emulador Android a API é alcançada por `10.0.2.2:5210` (já tratado em `ApiConfig`).
+> No Android o `ApiConfig` aponta para o servidor (`lab.miltecti.com.br/fin_back/`), em Debug e Release. Para usar o emulador contra a Api local, troque pelo endereço comentado (`10.0.2.2:5210`). Host HTTP novo precisa entrar em `Platforms/Android/Resources/xml/network_security_config.xml`.
 > No Visual Studio: definir `Contas_App` como projeto de inicialização e escolher o target na barra de ferramentas.
 
 ### Contas_Test
@@ -278,6 +294,7 @@ docker run -d -p 5210:8080 --name contas-api \
 
 > Container escuta em `8080` e é publicado em `${API_PORT:-5210}` no host — então **não** suba o container e o `dotnet run` da API ao mesmo tempo.
 > Autenticação Windows (`Integrated Security`) **não** funciona em container Linux: use login SQL.
+> O compose passa `PathBase` (`API_PATH_BASE`, padrão `/fin_back`) para o container responder atrás de proxy na subpasta.
 
 ### Banco de dados
 
@@ -305,6 +322,8 @@ Problemas reais já identificados no código atual. Ler antes de mexer nas área
 
 - **`GET api/Usuarios` devolve todos os usuários do sistema.** Sem filtro por dono nem papel de administrador — a tela `/usuarios` expõe nome e e-mail de qualquer usuário cadastrado para qualquer usuário logado. Aceitável enquanto o uso é pessoal; com mais de um usuário real, esse endpoint precisa de autorização antes de qualquer outra coisa.
 - **Sem refresh token nem revogação** — o JWT vale até expirar (`Jwt:ExpirationMinutes`).
+- **Credenciais versionadas:** a senha de `user_db_dev` (em `Contas_Api/appsettings.json` e no `ContasDbContext.cs`) e a `Jwt:Key` estão no repositório. O caminho é passá-las por variável de ambiente no IIS (`ConnectionStrings__DefaultConnection`, `Jwt__Key`).
+- **Swagger ligado na publicação** (`Swagger:Habilitado: true`) por ser laboratório — desligar num ambiente de produção de verdade.
 - **CORS não está configurado** na API. Não faz falta hoje (Blazor Server chama server-side, MAUI é nativo), mas qualquer cliente que rode no browser vai esbarrar nisso.
 
 ### Armadilhas ao escrever código
@@ -312,7 +331,7 @@ Problemas reais já identificados no código atual. Ler antes de mexer nas área
 - **`ApplyUpdate` dos Converters sobrescreve as colunas de imagem** (`img_conta`, `img_categoria`, `img_logo`, imagem do usuário) com o que vier no DTO. Quem chama `PUT` precisa devolver os bytes atuais, senão a imagem existente é apagada. Os formulários do Web não editam imagem, mas já devolvem o valor atual — **qualquer cliente novo precisa do mesmo cuidado**.
 - **`AtualizarDividaDto` não tem `IdConta` nem `IdCategoria`** (ao contrário do `AdicionarDividaDto`): não dá para trocar conta ou categoria de uma dívida existente. O formulário mostra os dois campos como somente-leitura na edição.
 - **`OperacaoDto` não tem nenhum campo de texto** (nome/descrição). A listagem de Operações filtra pelo **nome do investimento**, resolvido a partir de `IdInvestimento`.
-- **`ContasDbContext.OnConfiguring` tem connection string hardcoded** como fallback (nome de servidor interno). Inofensiva na prática — a API sempre configura via DI —, mas vale trocar por algo neutro se o repositório for aberto.
+- **Connection string em dois lugares:** o `appsettings` da Api e as constantes `ConexaoDesenvolvimento`/`ConexaoPublicacao` do `ContasDbContext` (usadas só sem DI: `ConexaoTest`, `dotnet-ef`). Mudou o banco, mude nos dois. `ObterStringConexao()` escolhe por `ConnectionStrings__DefaultConnection`, depois pelo ambiente e, sem ambiente, Debug × Release.
 
 ### Desempenho (irrelevante em volume pessoal, primeiro a doer se crescer)
 
@@ -380,5 +399,6 @@ Problemas reais já identificados no código atual. Ler antes de mexer nas área
 | 38 | `ce561ef` | 2026-09-21 | **`MainPage` do app mostra e edita saldos:** `ApiConfig`, `AppSession`, `ApiClient`, `ContasApiService`, `ContaSaldoItem`; token guardado no login. |
 | 39 | `5385bb4` | 2026-09-21 | Cria `spec/guia-rapido.md` e renomeia o tech-spec para `spec/arquitetura-detalhada.md`. |
 | 40 | `85afc05` | 2026-09-21 | **App:** separa Recarregar de Editar Saldos (o botão não recarregava), releitura após salvar, **compartilhar saldos como PNG** (`SaldosImagemService`) e **aba `Contas`** com o mês a pagar/a receber, alcançada por deslize (`ResumoMensalService`, `Tab` no Shell, rota `//Home/MainPage`). |
+| 41 | `6af6f90` | 2026-09-23 | **Api em desenvolvimento × publicação:** `appsettings.json` de publicação (login SQL, `PathBase /fin_back`, Swagger) e `appsettings.Development.json` local (`Integrated Security`); `ContasDbContext.ObterStringConexao()` escolhe a conexão sem DI; Web e App apontam para `lab.miltecti.com.br/fin_back/`; `network_security_config` libera HTTP no Android. |
 
 > Detalhe completo de cada commit em `spec/commit_<hash>.md`.
