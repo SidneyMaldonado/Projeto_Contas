@@ -12,6 +12,8 @@ services:
       - "${API_PORT:-5210}:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Development}"
+      # Subpasta publicada: http://lab.miltecti.com.br/fin_back/
+      PathBase: "${API_PATH_BASE:-/fin_back}"
       # Autenticacao Windows (Integrated Security) NAO funciona em container Linux:
       # e obrigatorio usar um login SQL Server.
       ConnectionStrings__DefaultConnection: "Server=${DB_SERVER};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};TrustServerCertificate=True"

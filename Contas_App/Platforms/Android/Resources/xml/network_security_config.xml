@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O Android 9+ bloqueia HTTP sem criptografia (cleartext) por padrao.
+     A Api ainda nao tem HTTPS, entao liberamos HTTP apenas para os hosts abaixo. -->
+<network-security-config>
+	<domain-config cleartextTrafficPermitted="true">
+		<domain includeSubdomains="false">lab.miltecti.com.br</domain>
+		<!-- Emulador Android acessando a Api local da maquina -->
+		<domain includeSubdomains="false">10.0.2.2</domain>
+	</domain-config>
+</network-security-config>

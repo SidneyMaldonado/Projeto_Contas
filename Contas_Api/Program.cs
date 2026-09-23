@@ -182,13 +182,24 @@ builder.Services.AddScoped<ObterTodosUsuarioUseCase>();
 
 var app = builder.Build();
 
+// Subpasta onde a Api e publicada (ex.: http://lab.miltecti.com.br/fin_back/).
+// UsePathBase remove o prefixo quando ele vem na URL; requisicoes sem o prefixo
+// continuam funcionando, entao serve tanto para o proxy quanto para rodar local.
+var pathBase = app.Configuration["PathBase"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.UsePathBase("/" + pathBase.Trim('/'));
+}
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Swagger sempre em Development; nos demais ambientes, so com "Swagger:Habilitado": true
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger:Habilitado"))
 {
     app.MapOpenApi().AllowAnonymous();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "Contas_Api v1");
+        // Caminho relativo a /swagger/, para respeitar o PathBase
+        options.SwaggerEndpoint("../openapi/v1.json", "Contas_Api v1");
         options.RoutePrefix = "swagger";
     });
 }

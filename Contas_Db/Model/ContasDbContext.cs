@@ -23,12 +23,46 @@ public class ContasDbContext : DbContext
     {
     }
 
+    // Usadas apenas quando o contexto e criado sem DI (testes, ferramentas do EF).
+    // A Api configura o contexto pelo appsettings.{Ambiente}.json.
+    private const string ConexaoDesenvolvimento =
+        "Server=MS211,1434;Database=test_fin;Integrated Security=True;TrustServerCertificate=True";
+    private const string ConexaoPublicacao =
+        "Server=MS211,1434;Database=test_fin;User Id=user_db_dev;Password=dev@M1lt3c#;TrustServerCertificate=True";
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseSqlServer(
-                "Server=MS211,1434;Database=test_fin;Integrated Security=True;TrustServerCertificate=True");
+            optionsBuilder.UseSqlServer(ObterStringConexao());
         }
+    }
+
+    // Ordem: variavel ConnectionStrings__DefaultConnection (mesma do appsettings/Docker);
+    // senao o ambiente (ASPNETCORE_ENVIRONMENT/DOTNET_ENVIRONMENT);
+    // sem ambiente definido, Debug = desenvolvimento e Release = publicacao.
+    public static string ObterStringConexao()
+    {
+        var conexao = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+        if (!string.IsNullOrWhiteSpace(conexao))
+        {
+            return conexao;
+        }
+
+        var ambiente = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+
+        if (!string.IsNullOrWhiteSpace(ambiente))
+        {
+            return string.Equals(ambiente, "Development", StringComparison.OrdinalIgnoreCase)
+                ? ConexaoDesenvolvimento
+                : ConexaoPublicacao;
+        }
+
+#if DEBUG
+        return ConexaoDesenvolvimento;
+#else
+        return ConexaoPublicacao;
+#endif
     }
 }

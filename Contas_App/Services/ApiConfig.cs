@@ -7,7 +7,8 @@ namespace Contas_App.Services;
 public static class ApiConfig
 {
 #if ANDROID
-    public const string BaseUrl = "http://10.0.2.2:5210/";
+    public const string BaseUrl = "http://lab.miltecti.com.br/fin_back/";
+    // Emulador apontando para a Api local: "http://10.0.2.2:5210/"
 #else
     public const string BaseUrl = "http://localhost:5210/";
 #endif
