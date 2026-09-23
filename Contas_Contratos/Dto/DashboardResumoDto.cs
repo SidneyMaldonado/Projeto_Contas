@@ -6,4 +6,5 @@ public class DashboardResumoDto
     public IEnumerable<ParcelaDto> ProximasParcelas { get; set; } = [];
     public decimal ValorTotalInvestido { get; set; }
     public decimal ValorTotalDividasAbertas { get; set; }
+    public decimal ValorTotalReceitasAbertas { get; set; }
 }

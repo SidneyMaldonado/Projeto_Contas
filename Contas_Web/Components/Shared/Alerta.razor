@@ -1,0 +1,21 @@
+@* Faixa de mensagem de sucesso/erro das telas de listagem e formulário. *@
+
+@if (!string.IsNullOrWhiteSpace(Mensagem))
+{
+    <div class="alert @(Sucesso ? "alert-success" : "alert-danger") d-flex align-items-start" role="alert">
+        <div class="flex-grow-1">@Mensagem</div>
+
+        @if (OnFechar.HasDelegate)
+        {
+            <button type="button" class="btn-close ms-2" aria-label="Fechar" @onclick="OnFechar"></button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string? Mensagem { get; set; }
+
+    [Parameter] public bool Sucesso { get; set; }
+
+    [Parameter] public EventCallback OnFechar { get; set; }
+}

@@ -1,11 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <Shell
     x:Class="Contas_App.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:Contas_App"
     xmlns:pages="clr-namespace:Contas_App.Pages"
-    Title="Contas_App">
+    Title="Contas_App"
+    TabBarBackgroundColor="Black"
+    TabBarTitleColor="{StaticResource Gold}"
+    TabBarUnselectedColor="{StaticResource Gray300}">
 
     <ShellContent
         Title="Login"
@@ -17,9 +20,19 @@
         ContentTemplate="{DataTemplate pages:RegisterPage}"
         Route="RegisterPage" />
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <!-- As duas no mesmo Tab: no Android isso vira abas com deslize horizontal entre elas. -->
+    <Tab Title="Home" Route="Home">
+
+        <ShellContent
+            Title="Saldos"
+            ContentTemplate="{DataTemplate local:MainPage}"
+            Route="MainPage" />
+
+        <ShellContent
+            Title="Contas"
+            ContentTemplate="{DataTemplate pages:ContasPage}"
+            Route="ContasPage" />
+
+    </Tab>
 
 </Shell>

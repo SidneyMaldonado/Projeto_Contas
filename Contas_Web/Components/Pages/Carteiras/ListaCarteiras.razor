@@ -1,0 +1,81 @@
+@page "/carteiras"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject CarteirasApiService CarteirasApi
+
+<PageTitle>Carteiras</PageTitle>
+
+<h1 class="h3 mb-3">Carteiras</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_carteiras is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar as carteiras. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por nome" UrlNovo="/carteiras/novo" />
+
+    @if (!Filtradas.Any())
+    {
+        <p class="text-muted">Nenhuma carteira encontrada.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var carteira in Filtradas)
+                    {
+                        <tr>
+                            <td>@carteira.Nome</td>
+                            <td><Situacao Ativo="carteira.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/carteiras/{carteira.Id}/editar")"
+                                            Ativo="carteira.Ativo"
+                                            OnInativar="() => InativarAsync(carteira.Id)"
+                                            OnExcluir="() => ExcluirAsync(carteira.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtradas.Count() de @_carteiras.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<CarteiraDto>? _carteiras;
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+        => _carteiras = (await CarteirasApi.ObterTodosAsync())?.OrderBy(c => c.Nome).ToList();
+
+    private IEnumerable<CarteiraDto> Filtradas => (_carteiras ?? [])
+        .Where(c => _mostrarInativos || c.Ativo)
+        .Where(c => Filtro.Corresponde(_filtro, c.Nome));
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await CarteirasApi.InativarAsync(id), "Carteira inativada.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await CarteirasApi.ExcluirAsync(id), "Carteira excluída.");
+}

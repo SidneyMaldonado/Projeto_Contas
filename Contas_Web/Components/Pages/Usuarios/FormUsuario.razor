@@ -1,0 +1,161 @@
+@page "/usuarios/novo"
+@page "/usuarios/{Id:int}/editar"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using System.ComponentModel.DataAnnotations
+@inherits PaginaAutenticada
+@inject UsuariosApiService UsuariosApi
+
+<PageTitle>@Titulo</PageTitle>
+
+<h1 class="h3 mb-3">@Titulo</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_naoEncontrado)
+{
+    <div class="alert alert-warning" role="alert">Usuário não encontrado.</div>
+    <a class="btn btn-outline-secondary" href="/usuarios">Voltar</a>
+}
+else
+{
+    <div class="card shadow-sm" style="max-width: 640px;">
+        <div class="card-body">
+            <EditForm Model="_modelo" OnValidSubmit="SalvarAsync">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label" for="nome">Nome</label>
+                    <InputText id="nome" class="form-control" @bind-Value="_modelo.Nome" />
+                    <ValidationMessage For="() => _modelo.Nome" />
+                    <div class="form-text">Mínimo de 3 caracteres.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="email">E-mail</label>
+                    <InputText id="email" class="form-control" @bind-Value="_modelo.Email" />
+                    <ValidationMessage For="() => _modelo.Email" />
+                </div>
+
+                @if (!Editando)
+                {
+                    <div class="mb-3">
+                        <label class="form-label" for="senha">Senha</label>
+                        <input id="senha" type="password" class="form-control"
+                               value="@_modelo.Senha" @oninput="AoDigitarSenha" />
+                        <ValidationMessage For="() => _modelo.Senha" />
+                        <div class="form-text">
+                            No mínimo 8 caracteres, com maiúscula, minúscula e número.
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info py-2" role="alert">
+                        A senha não é alterada por aqui — a API expõe isso em
+                        PATCH api/usuarios/@Id/senha, que exige a senha atual.
+                    </div>
+                }
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@_salvando">
+                        @(_salvando ? "Salvando..." : "Salvar")
+                    </button>
+                    <a class="btn btn-outline-secondary" href="/usuarios">Cancelar</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    // Modelo próprio porque a senha só existe na inclusão: AdicionarUsuarioDto a
+    // marca como [Required] e AtualizarUsuarioDto não a tem.
+    private sealed class ModeloUsuario
+    {
+        [Required(ErrorMessage = "Informe o nome.")]
+        [MaxLength(100)]
+        public string Nome { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Informe o e-mail.")]
+        [EmailAddress(ErrorMessage = "E-mail inválido.")]
+        [MaxLength(100)]
+        public string Email { get; set; } = string.Empty;
+
+        public string Senha { get; set; } = string.Empty;
+
+        public byte[]? Imagem { get; set; }
+    }
+
+    private readonly ModeloUsuario _modelo = new();
+
+    private bool _naoEncontrado;
+    private bool _salvando;
+
+    private bool Editando => Id.HasValue;
+
+    private string Titulo => Editando ? "Editar usuário" : "Novo usuário";
+
+    private void AoDigitarSenha(ChangeEventArgs e)
+        => _modelo.Senha = e.Value?.ToString() ?? string.Empty;
+
+    protected override async Task CarregarAsync()
+    {
+        if (!Editando)
+            return;
+
+        var usuario = await UsuariosApi.ObterPorIdAsync(Id!.Value);
+        if (usuario is null)
+        {
+            _naoEncontrado = true;
+            return;
+        }
+
+        _modelo.Nome = usuario.Nome;
+        _modelo.Email = usuario.Email;
+        _modelo.Imagem = usuario.Imagem;
+    }
+
+    private async Task SalvarAsync()
+    {
+        LimparMensagem();
+
+        if (!Editando && _modelo.Senha.Length == 0)
+        {
+            DefinirErro("Informe a senha.");
+            return;
+        }
+
+        _salvando = true;
+
+        var resultado = Editando
+            ? await UsuariosApi.AtualizarAsync(Id!.Value, new AtualizarUsuarioDto
+                {
+                    Nome = _modelo.Nome,
+                    Email = _modelo.Email,
+                    Imagem = _modelo.Imagem
+                })
+            : await UsuariosApi.AdicionarAsync(new AdicionarUsuarioDto
+                {
+                    Nome = _modelo.Nome,
+                    Email = _modelo.Email,
+                    Senha = _modelo.Senha,
+                    Imagem = _modelo.Imagem
+                });
+
+        _salvando = false;
+
+        if (resultado.Sucesso)
+        {
+            Navegacao.NavigateTo("/usuarios");
+            return;
+        }
+
+        DefinirErro(resultado.Erro);
+    }
+}

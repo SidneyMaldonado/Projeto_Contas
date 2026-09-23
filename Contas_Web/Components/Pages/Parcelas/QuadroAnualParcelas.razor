@@ -1,0 +1,197 @@
+@page "/parcelas/anual"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject ParcelasApiService ParcelasApi
+@inject DividasApiService DividasApi
+
+<PageTitle>Quadro anual de parcelas</PageTitle>
+
+<h1 class="h3 mb-1">Quadro anual de parcelas — @_ano</h1>
+<p class="text-muted small">
+    Valores das parcelas no mês de vencimento, pagas e em aberto. Somente parcelas ativas.
+</p>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (!_carregou)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar o quadro anual. Tente novamente mais tarde.
+    </div>
+}
+else if (_dividas.Count == 0 && _receitas.Count == 0)
+{
+    <p class="text-muted">Nenhuma parcela com vencimento em @_ano.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle quadro">
+            <thead>
+                <tr>
+                    <th>Dívida / Receita</th>
+                    @foreach (var mes in Meses)
+                    {
+                        <th class="text-end">@Formato.Mes(mes)</th>
+                    }
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var secao in Secoes)
+                {
+                    <tr class="table-light">
+                        <th colspan="14">@secao.Titulo</th>
+                    </tr>
+
+                    @if (secao.Linhas.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="14" class="text-muted">Nenhum registro com parcelas em @_ano.</td>
+                        </tr>
+                    }
+
+                    @foreach (var linha in secao.Linhas)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center justify-content-between gap-3">
+                                    <span>@linha.Nome</span>
+                                    <a class="btn btn-sm btn-outline-primary text-nowrap"
+                                       href="@($"/parcelas?idDivida={linha.IdDivida}")">
+                                        Ver parcelas
+                                    </a>
+                                </div>
+                            </td>
+                            @foreach (var mes in Meses)
+                            {
+                                <td class="text-end @ClasseVazia(linha.Meses[mes - 1])">@Celula(linha.Meses[mes - 1])</td>
+                            }
+                            <td class="text-end fw-semibold">@Celula(linha.Total)</td>
+                        </tr>
+                    }
+
+                    <tr class="fw-semibold border-top">
+                        <td>@secao.RotuloSubtotal</td>
+                        @{ var subtotal = Somar(secao.Linhas); }
+                        @foreach (var mes in Meses)
+                        {
+                            <td class="text-end @ClasseVazia(subtotal[mes - 1])">@Celula(subtotal[mes - 1])</td>
+                        }
+                        <td class="text-end">@Celula(subtotal.Sum())</td>
+                    </tr>
+                }
+
+                <tr class="table-secondary fw-bold">
+                    <td>Resultado (receitas - dívidas)</td>
+                    @{ var resultado = Resultado(); }
+                    @foreach (var mes in Meses)
+                    {
+                        <td class="text-end @ClasseResultado(resultado[mes - 1])">@Celula(resultado[mes - 1])</td>
+                    }
+                    <td class="text-end @ClasseResultado(resultado.Sum())">@Celula(resultado.Sum())</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private static readonly int[] Meses = [.. Enumerable.Range(1, 12)];
+
+    private readonly int _ano = DateTime.Today.Year;
+
+    private bool _carregou;
+
+    private List<Linha> _dividas = [];
+    private List<Linha> _receitas = [];
+
+    protected override async Task CarregarAsync()
+    {
+        var parcelasTask = ParcelasApi.ObterTodosAsync();
+        var dividasTask = DividasApi.ObterTodosAsync();
+
+        var parcelas = await parcelasTask;
+        var dividas = await dividasTask;
+
+        _carregou = parcelas is not null && dividas is not null;
+        if (!_carregou)
+            return;
+
+        var porId = dividas!.ToDictionary(d => d.Id);
+
+        // Uma linha por dívida/receita, com as parcelas do ano somadas no mês de vencimento.
+        var linhas = parcelas!
+            .Where(p => p.Ativo && p.DataVencimento.Year == _ano)
+            .GroupBy(p => p.IdDivida)
+            .Select(grupo =>
+            {
+                var divida = porId.GetValueOrDefault(grupo.Key);
+                return new
+                {
+                    // Uma parcela sem dívida correspondente entra como dívida, igual ao resto das telas.
+                    EhDivida = divida?.EhDivida ?? true,
+                    Linha = new Linha(grupo.Key, divida?.Nome ?? $"#{grupo.Key}", SomarPorMes(grupo))
+                };
+            })
+            .ToList();
+
+        _dividas = [.. linhas.Where(l => l.EhDivida).Select(l => l.Linha).OrderBy(l => l.Nome)];
+        _receitas = [.. linhas.Where(l => !l.EhDivida).Select(l => l.Linha).OrderBy(l => l.Nome)];
+    }
+
+    private IEnumerable<Secao> Secoes =>
+    [
+        new("Dívidas", _dividas, "Subtotal dívidas"),
+        new("Receitas", _receitas, "Subtotal receitas")
+    ];
+
+    /// <summary>Distribui os valores das parcelas nas 12 posições do ano (índice 0 = janeiro).</summary>
+    private static decimal[] SomarPorMes(IEnumerable<ParcelaDto> parcelas)
+    {
+        var meses = new decimal[12];
+
+        foreach (var parcela in parcelas)
+            meses[parcela.DataVencimento.Month - 1] += parcela.Valor;
+
+        return meses;
+    }
+
+    private static decimal[] Somar(IEnumerable<Linha> linhas)
+    {
+        var total = new decimal[12];
+
+        foreach (var linha in linhas)
+        {
+            for (var mes = 0; mes < 12; mes++)
+                total[mes] += linha.Meses[mes];
+        }
+
+        return total;
+    }
+
+    private decimal[] Resultado()
+    {
+        var dividas = Somar(_dividas);
+        var receitas = Somar(_receitas);
+
+        return [.. Meses.Select(mes => receitas[mes - 1] - dividas[mes - 1])];
+    }
+
+    private static string Celula(decimal valor) => valor == 0 ? "—" : Formato.Valor(valor);
+
+    private static string? ClasseVazia(decimal valor) => valor == 0 ? "text-muted" : null;
+
+    private static string? ClasseResultado(decimal valor) => valor < 0 ? "text-danger" : null;
+
+    private record Linha(int IdDivida, string Nome, decimal[] Meses)
+    {
+        public decimal Total => Meses.Sum();
+    }
+
+    private record Secao(string Titulo, List<Linha> Linhas, string RotuloSubtotal);
+}

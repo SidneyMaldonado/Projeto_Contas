@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Variaveis de ambiente do Docker (contem credenciais)
+.env
+.env.local
+!.env.example

@@ -1,0 +1,112 @@
+@page "/credores/novo"
+@page "/credores/{Id:int}/editar"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject CredoresApiService CredoresApi
+
+<PageTitle>@Titulo</PageTitle>
+
+<h1 class="h3 mb-3">@Titulo</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_naoEncontrado)
+{
+    <div class="alert alert-warning" role="alert">Credor não encontrado.</div>
+    <a class="btn btn-outline-secondary" href="/credores">Voltar</a>
+}
+else
+{
+    <div class="card shadow-sm" style="max-width: 640px;">
+        <div class="card-body">
+            <EditForm Model="_modelo" OnValidSubmit="SalvarAsync">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label" for="nome">Nome</label>
+                    <InputText id="nome" class="form-control" @bind-Value="_modelo.Nome" />
+                    <ValidationMessage For="() => _modelo.Nome" />
+                    <div class="form-text">De 3 a 50 caracteres.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="observacoes">Observações</label>
+                    <InputTextArea id="observacoes" class="form-control" rows="3"
+                                   @bind-Value="_modelo.Observacoes" />
+                    <ValidationMessage For="() => _modelo.Observacoes" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@_salvando">
+                        @(_salvando ? "Salvando..." : "Salvar")
+                    </button>
+                    <a class="btn btn-outline-secondary" href="/credores">Cancelar</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private readonly AdicionarCredorDto _modelo = new();
+
+    // CredorConverter.ApplyUpdate sobrescreve img_logo com o que vier no DTO.
+    private byte[]? _logoAtual;
+
+    private bool _naoEncontrado;
+    private bool _salvando;
+
+    private bool Editando => Id.HasValue;
+
+    private string Titulo => Editando ? "Editar credor" : "Novo credor";
+
+    protected override async Task CarregarAsync()
+    {
+        if (!Editando)
+            return;
+
+        var credor = await CredoresApi.ObterPorIdAsync(Id!.Value);
+        if (credor is null)
+        {
+            _naoEncontrado = true;
+            return;
+        }
+
+        _modelo.Nome = credor.Nome;
+        _modelo.Observacoes = credor.Observacoes;
+        _logoAtual = credor.Logo;
+    }
+
+    private async Task SalvarAsync()
+    {
+        _salvando = true;
+        LimparMensagem();
+
+        _modelo.Logo = _logoAtual;
+
+        var resultado = Editando
+            ? await CredoresApi.AtualizarAsync(Id!.Value, new AtualizarCredorDto
+                {
+                    Nome = _modelo.Nome,
+                    Observacoes = _modelo.Observacoes,
+                    Logo = _modelo.Logo
+                })
+            : await CredoresApi.AdicionarAsync(_modelo);
+
+        _salvando = false;
+
+        if (resultado.Sucesso)
+        {
+            Navegacao.NavigateTo("/credores");
+            return;
+        }
+
+        DefinirErro(resultado.Erro);
+    }
+}

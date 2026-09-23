@@ -1,0 +1,5 @@
+/* Com 14 colunas os valores não podem quebrar linha; a rolagem fica no table-responsive. */
+.quadro th,
+.quadro td {
+    white-space: nowrap;
+}

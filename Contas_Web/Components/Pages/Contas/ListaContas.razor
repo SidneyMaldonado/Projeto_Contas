@@ -1,0 +1,83 @@
+@page "/contas"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject ContasApiService ContasApi
+
+<PageTitle>Contas</PageTitle>
+
+<h1 class="h3 mb-3">Contas</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_contas is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar as contas. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por nome" UrlNovo="/contas/novo" />
+
+    @if (!Filtradas.Any())
+    {
+        <p class="text-muted">Nenhuma conta encontrada.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th class="text-end">Saldo</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var conta in Filtradas)
+                    {
+                        <tr>
+                            <td>@conta.Nome</td>
+                            <td class="text-end">@Formato.Moeda(conta.Saldo)</td>
+                            <td><Situacao Ativo="conta.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/contas/{conta.Id}/editar")"
+                                            Ativo="conta.Ativo"
+                                            OnInativar="() => InativarAsync(conta.Id)"
+                                            OnExcluir="() => ExcluirAsync(conta.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtradas.Count() de @_contas.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<ContaDto>? _contas;
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+        => _contas = (await ContasApi.ObterTodosAsync())?.OrderBy(c => c.Nome).ToList();
+
+    private IEnumerable<ContaDto> Filtradas => (_contas ?? [])
+        .Where(c => _mostrarInativos || c.Ativo)
+        .Where(c => Filtro.Corresponde(_filtro, c.Nome));
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await ContasApi.InativarAsync(id), "Conta inativada.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await ContasApi.ExcluirAsync(id), "Conta excluída.");
+}

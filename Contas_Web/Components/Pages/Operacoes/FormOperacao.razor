@@ -1,0 +1,154 @@
+@page "/operacoes/novo"
+@page "/operacoes/{Id:int}/editar"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject OperacoesApiService OperacoesApi
+@inject InvestimentosApiService InvestimentosApi
+
+<PageTitle>@Titulo</PageTitle>
+
+<h1 class="h3 mb-3">@Titulo</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_naoEncontrado)
+{
+    <div class="alert alert-warning" role="alert">Operação não encontrada.</div>
+    <a class="btn btn-outline-secondary" href="/operacoes">Voltar</a>
+}
+else
+{
+    <div class="card shadow-sm" style="max-width: 720px;">
+        <div class="card-body">
+            <EditForm Model="_modelo" OnValidSubmit="SalvarAsync">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label" for="investimento">Investimento</label>
+                    <InputSelect id="investimento" class="form-select" @bind-Value="_modelo.IdInvestimento">
+                        <option value="0">Selecione...</option>
+                        @foreach (var investimento in _investimentos)
+                        {
+                            <option value="@investimento.Id">@investimento.Nome</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="tipo">Tipo</label>
+                    <InputSelect id="tipo" class="form-select" @bind-Value="_modelo.Compra">
+                        <option value="true">Compra</option>
+                        <option value="false">Venda</option>
+                    </InputSelect>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="data">Data</label>
+                        <InputDate id="data" class="form-control" @bind-Value="_modelo.DataOperacao" />
+                        <ValidationMessage For="() => _modelo.DataOperacao" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="quantidade">Quantidade</label>
+                        <InputNumber id="quantidade" class="form-control" @bind-Value="_modelo.Quantidade" />
+                        <ValidationMessage For="() => _modelo.Quantidade" />
+                        <div class="form-text">Maior que zero.</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="valor">Valor da operação</label>
+                        <InputNumber id="valor" class="form-control" step="0.01"
+                                     @bind-Value="_modelo.ValorOperacao" />
+                        <ValidationMessage For="() => _modelo.ValorOperacao" />
+                        <div class="form-text">Maior que zero.</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@_salvando">
+                        @(_salvando ? "Salvando..." : "Salvar")
+                    </button>
+                    <a class="btn btn-outline-secondary" href="/operacoes">Cancelar</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private readonly AdicionarOperacaoDto _modelo = new() { DataOperacao = DateTime.Today, Compra = true };
+
+    private List<InvestimentoDto> _investimentos = [];
+
+    private bool _naoEncontrado;
+    private bool _salvando;
+
+    private bool Editando => Id.HasValue;
+
+    private string Titulo => Editando ? "Editar operação" : "Nova operação";
+
+    protected override async Task CarregarAsync()
+    {
+        _investimentos = (await InvestimentosApi.ObterTodosAsync())?
+            .Where(i => i.Ativo).OrderBy(i => i.Nome).ToList() ?? [];
+
+        if (!Editando)
+            return;
+
+        var operacao = await OperacoesApi.ObterPorIdAsync(Id!.Value);
+        if (operacao is null)
+        {
+            _naoEncontrado = true;
+            return;
+        }
+
+        _modelo.IdInvestimento = operacao.IdInvestimento;
+        _modelo.Compra = operacao.Compra;
+        _modelo.DataOperacao = operacao.DataOperacao;
+        _modelo.Quantidade = operacao.Quantidade;
+        _modelo.ValorOperacao = operacao.ValorOperacao;
+    }
+
+    private async Task SalvarAsync()
+    {
+        LimparMensagem();
+
+        // [Required] em int é no-op no DataAnnotationsValidator: a opção "Selecione..."
+        // vale 0 e passaria pela validação do EditForm.
+        if (_modelo.IdInvestimento == 0)
+        {
+            DefinirErro("Selecione o investimento.");
+            return;
+        }
+
+        _salvando = true;
+
+        var resultado = Editando
+            ? await OperacoesApi.AtualizarAsync(Id!.Value, new AtualizarOperacaoDto
+                {
+                    IdInvestimento = _modelo.IdInvestimento,
+                    Compra = _modelo.Compra,
+                    DataOperacao = _modelo.DataOperacao,
+                    Quantidade = _modelo.Quantidade,
+                    ValorOperacao = _modelo.ValorOperacao
+                })
+            : await OperacoesApi.AdicionarAsync(_modelo);
+
+        _salvando = false;
+
+        if (resultado.Sucesso)
+        {
+            Navegacao.NavigateTo("/operacoes");
+            return;
+        }
+
+        DefinirErro(resultado.Erro);
+    }
+}

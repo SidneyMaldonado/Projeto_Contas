@@ -1,0 +1,115 @@
+@page "/contas/novo"
+@page "/contas/{Id:int}/editar"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject ContasApiService ContasApi
+
+<PageTitle>@Titulo</PageTitle>
+
+<h1 class="h3 mb-3">@Titulo</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_naoEncontrado)
+{
+    <div class="alert alert-warning" role="alert">Conta não encontrada.</div>
+    <a class="btn btn-outline-secondary" href="/contas">Voltar</a>
+}
+else
+{
+    <div class="card shadow-sm" style="max-width: 640px;">
+        <div class="card-body">
+            <EditForm Model="_modelo" OnValidSubmit="SalvarAsync">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label" for="nome">Nome</label>
+                    <InputText id="nome" class="form-control" @bind-Value="_modelo.Nome" />
+                    <ValidationMessage For="() => _modelo.Nome" />
+                    <div class="form-text">Mínimo de 3 caracteres.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="saldo">Saldo</label>
+                    <InputNumber id="saldo" class="form-control" step="0.01" @bind-Value="_modelo.Saldo" />
+                    <ValidationMessage For="() => _modelo.Saldo" />
+                    <div class="form-text">Não pode ser negativo.</div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" disabled="@_salvando">
+                        @(_salvando ? "Salvando..." : "Salvar")
+                    </button>
+                    <a class="btn btn-outline-secondary" href="/contas">Cancelar</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private readonly AdicionarContaDto _modelo = new();
+
+    // A imagem não é editada por aqui, mas ContaConverter.ApplyUpdate sobrescreve
+    // img_conta com o que vier no DTO — então o valor atual precisa ser devolvido.
+    private byte[]? _imagemAtual;
+
+    private bool _naoEncontrado;
+    private bool _salvando;
+
+    private bool Editando => Id.HasValue;
+
+    private string Titulo => Editando ? "Editar conta" : "Nova conta";
+
+    protected override async Task CarregarAsync()
+    {
+        if (!Editando)
+            return;
+
+        var conta = await ContasApi.ObterPorIdAsync(Id!.Value);
+        if (conta is null)
+        {
+            _naoEncontrado = true;
+            return;
+        }
+
+        _modelo.Nome = conta.Nome;
+        _modelo.Saldo = conta.Saldo;
+        _imagemAtual = conta.Imagem;
+    }
+
+    private async Task SalvarAsync()
+    {
+        _salvando = true;
+        LimparMensagem();
+
+        _modelo.IdUsuario = UsuarioId;
+        _modelo.Imagem = _imagemAtual;
+
+        var resultado = Editando
+            ? await ContasApi.AtualizarAsync(Id!.Value, new AtualizarContaDto
+                {
+                    IdUsuario = _modelo.IdUsuario,
+                    Nome = _modelo.Nome,
+                    Imagem = _modelo.Imagem,
+                    Saldo = _modelo.Saldo
+                })
+            : await ContasApi.AdicionarAsync(_modelo);
+
+        _salvando = false;
+
+        if (resultado.Sucesso)
+        {
+            Navegacao.NavigateTo("/contas");
+            return;
+        }
+
+        DefinirErro(resultado.Erro);
+    }
+}

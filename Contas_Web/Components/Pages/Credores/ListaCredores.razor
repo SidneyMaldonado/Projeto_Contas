@@ -1,0 +1,83 @@
+@page "/credores"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject CredoresApiService CredoresApi
+
+<PageTitle>Credores</PageTitle>
+
+<h1 class="h3 mb-3">Credores</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_credores is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar os credores. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por nome ou observações" UrlNovo="/credores/novo" />
+
+    @if (!Filtrados.Any())
+    {
+        <p class="text-muted">Nenhum credor encontrado.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Observações</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var credor in Filtrados)
+                    {
+                        <tr>
+                            <td>@credor.Nome</td>
+                            <td>@Formato.Texto(credor.Observacoes)</td>
+                            <td><Situacao Ativo="credor.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/credores/{credor.Id}/editar")"
+                                            Ativo="credor.Ativo"
+                                            OnInativar="() => InativarAsync(credor.Id)"
+                                            OnExcluir="() => ExcluirAsync(credor.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtrados.Count() de @_credores.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<CredorDto>? _credores;
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+        => _credores = (await CredoresApi.ObterTodosAsync())?.OrderBy(c => c.Nome).ToList();
+
+    private IEnumerable<CredorDto> Filtrados => (_credores ?? [])
+        .Where(c => _mostrarInativos || c.Ativo)
+        .Where(c => Filtro.Corresponde(_filtro, c.Nome, c.Observacoes));
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await CredoresApi.InativarAsync(id), "Credor inativado.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await CredoresApi.ExcluirAsync(id), "Credor excluído.");
+}

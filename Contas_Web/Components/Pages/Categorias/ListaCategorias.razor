@@ -1,0 +1,81 @@
+@page "/categorias"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject CategoriasApiService CategoriasApi
+
+<PageTitle>Categorias</PageTitle>
+
+<h1 class="h3 mb-3">Categorias</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_categorias is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar as categorias. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por nome" UrlNovo="/categorias/novo" />
+
+    @if (!Filtradas.Any())
+    {
+        <p class="text-muted">Nenhuma categoria encontrada.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var categoria in Filtradas)
+                    {
+                        <tr>
+                            <td>@categoria.Nome</td>
+                            <td><Situacao Ativo="categoria.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/categorias/{categoria.Id}/editar")"
+                                            Ativo="categoria.Ativo"
+                                            OnInativar="() => InativarAsync(categoria.Id)"
+                                            OnExcluir="() => ExcluirAsync(categoria.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtradas.Count() de @_categorias.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<CategoriaDto>? _categorias;
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+        => _categorias = (await CategoriasApi.ObterTodosAsync())?.OrderBy(c => c.Nome).ToList();
+
+    private IEnumerable<CategoriaDto> Filtradas => (_categorias ?? [])
+        .Where(c => _mostrarInativos || c.Ativo)
+        .Where(c => Filtro.Corresponde(_filtro, c.Nome));
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await CategoriasApi.InativarAsync(id), "Categoria inativada.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await CategoriasApi.ExcluirAsync(id), "Categoria excluída.");
+}

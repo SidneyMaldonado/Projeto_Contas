@@ -1,0 +1,107 @@
+@page "/operacoes"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inherits PaginaAutenticada
+@inject OperacoesApiService OperacoesApi
+@inject InvestimentosApiService InvestimentosApi
+
+<PageTitle>Operações</PageTitle>
+
+<h1 class="h3 mb-3">Operações</h1>
+
+<Alerta Mensagem="@Mensagem" Sucesso="MensagemSucesso" OnFechar="LimparMensagem" />
+
+@if (Carregando)
+{
+    <p>Carregando...</p>
+}
+else if (_operacoes is null)
+{
+    <div class="alert alert-danger" role="alert">
+        Não foi possível carregar as operações. Tente novamente mais tarde.
+    </div>
+}
+else
+{
+    @* OperacaoDto não tem nome nem descrição própria: o filtro usa o nome do
+       investimento, resolvido a partir de IdInvestimento. *@
+    <BarraFiltro @bind-Texto="_filtro" @bind-MostrarInativos="_mostrarInativos"
+                 Placeholder="Filtrar por investimento" UrlNovo="/operacoes/novo" />
+
+    @if (!Filtradas.Any())
+    {
+        <p class="text-muted">Nenhuma operação encontrada.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Investimento</th>
+                        <th>Tipo</th>
+                        <th>Data</th>
+                        <th class="text-end">Quantidade</th>
+                        <th class="text-end">Valor</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var operacao in Filtradas)
+                    {
+                        <tr>
+                            <td>@NomeInvestimento(operacao.IdInvestimento)</td>
+                            <td>
+                                <span class="badge @(operacao.Compra ? "text-bg-primary" : "text-bg-info")">
+                                    @(operacao.Compra ? "Compra" : "Venda")
+                                </span>
+                            </td>
+                            <td>@Formato.Data(operacao.DataOperacao)</td>
+                            <td class="text-end">@operacao.Quantidade</td>
+                            <td class="text-end">@Formato.Moeda(operacao.ValorOperacao)</td>
+                            <td><Situacao Ativo="operacao.Ativo" /></td>
+                            <td class="text-end">
+                                <AcoesLinha UrlEditar="@($"/operacoes/{operacao.Id}/editar")"
+                                            Ativo="operacao.Ativo"
+                                            OnInativar="() => InativarAsync(operacao.Id)"
+                                            OnExcluir="() => ExcluirAsync(operacao.Id)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted small">@Filtradas.Count() de @_operacoes.Count registro(s).</p>
+    }
+}
+
+@code {
+    private List<OperacaoDto>? _operacoes;
+    private Dictionary<int, string> _investimentos = [];
+
+    private string _filtro = string.Empty;
+    private bool _mostrarInativos;
+
+    protected override async Task CarregarAsync()
+    {
+        var operacoes = OperacoesApi.ObterTodosAsync();
+        var investimentos = InvestimentosApi.ObterTodosAsync();
+
+        _operacoes = (await operacoes)?.OrderByDescending(o => o.DataOperacao).ToList();
+        _investimentos = (await investimentos)?.ToDictionary(i => i.Id, i => i.Nome) ?? [];
+    }
+
+    private IEnumerable<OperacaoDto> Filtradas => (_operacoes ?? [])
+        .Where(o => _mostrarInativos || o.Ativo)
+        .Where(o => Filtro.Corresponde(_filtro, NomeInvestimento(o.IdInvestimento)));
+
+    private string NomeInvestimento(int id) =>
+        _investimentos.TryGetValue(id, out var nome) ? nome : $"#{id}";
+
+    private async Task InativarAsync(int id)
+        => await AplicarResultadoAsync(await OperacoesApi.InativarAsync(id), "Operação inativada.");
+
+    private async Task ExcluirAsync(int id)
+        => await AplicarResultadoAsync(await OperacoesApi.ExcluirAsync(id), "Operação excluída.");
+}

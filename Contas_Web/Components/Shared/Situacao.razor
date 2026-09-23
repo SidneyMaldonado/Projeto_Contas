@@ -1,0 +1,9 @@
+@* Coluna "Situação" das listagens (exclusão lógica via dm_ativo). *@
+
+<span class="badge @(Ativo ? "text-bg-success" : "text-bg-secondary")">
+    @(Ativo ? "Ativo" : "Inativo")
+</span>
+
+@code {
+    [Parameter] public bool Ativo { get; set; }
+}

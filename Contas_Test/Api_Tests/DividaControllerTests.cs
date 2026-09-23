@@ -133,6 +133,66 @@ namespace Contas_Test.Api_Tests
         }
 
         [TestMethod]
+        public async Task Adicionar_DeveCriarReceita_QuandoEhDividaForFalse()
+        {
+            var categoria = await SeedCategoriaAsync();
+            var conta = await SeedContaAsync(CurrentUser.Id);
+            var dataVencimento = DateTime.Today.AddMonths(1);
+
+            var dto = new AdicionarDividaDto
+            {
+                IdUsuario = CurrentUser.Id,
+                IdConta = conta.Id,
+                IdCategoria = categoria.Id,
+                Nome = "Salário",
+                DiaVencimento = dataVencimento.Day,
+                DataPrimeiroVencimento = dataVencimento,
+                Parcelas = 12,
+                Valor = 6000m,
+                EhDivida = false
+            };
+
+            var response = await Client.PostAsJsonAsync("/api/dividas", dto);
+
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+
+            var criada = await response.Content.ReadFromJsonAsync<DividaDto>();
+            Assert.IsNotNull(criada);
+            Assert.IsFalse(criada!.EhDivida);
+
+            var relida = await Client.GetFromJsonAsync<DividaDto>($"/api/dividas/{criada.Id}");
+            Assert.IsFalse(relida!.EhDivida);
+        }
+
+        [TestMethod]
+        public async Task Adicionar_DeveTratarComoDivida_QuandoEhDividaForOmitido()
+        {
+            var categoria = await SeedCategoriaAsync();
+            var conta = await SeedContaAsync(CurrentUser.Id);
+            var dataVencimento = DateTime.Today.AddMonths(1);
+
+            // Clientes anteriores à coluna dm_divida não enviam o campo.
+            var corpo = new
+            {
+                IdUsuario = CurrentUser.Id,
+                IdConta = conta.Id,
+                IdCategoria = categoria.Id,
+                Nome = "Empréstimo Antigo",
+                DiaVencimento = dataVencimento.Day,
+                DataPrimeiroVencimento = dataVencimento,
+                Parcelas = 3,
+                Valor = 300m
+            };
+
+            var response = await Client.PostAsJsonAsync("/api/dividas", corpo);
+
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+
+            var criada = await response.Content.ReadFromJsonAsync<DividaDto>();
+            Assert.IsTrue(criada!.EhDivida);
+        }
+
+        [TestMethod]
         public async Task Adicionar_DeveGerarParcelas_ComValorDivididoEDataIncrementadaPorMes()
         {
             var categoria = await SeedCategoriaAsync();

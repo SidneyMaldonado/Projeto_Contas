@@ -1,34 +1,33 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using Contas_Contratos.Dto;
 
 namespace Contas_Web.Services;
 
-public class ContasApiService(HttpClient httpClient, AuthSession authSession)
+public class ContasApiService(ApiClient api)
 {
-    public async Task<IEnumerable<ContaResumoDto>?> ObterResumoAsync()
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "api/contas/resumo");
-        if (authSession.Token is not null)
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authSession.Token);
+    private const string Recurso = "api/contas";
 
-        var response = await httpClient.SendAsync(request);
-        if (!response.IsSuccessStatusCode)
-            return null;
+    public Task<IEnumerable<ContaDto>?> ObterTodosAsync() =>
+        api.ObterAsync<IEnumerable<ContaDto>>(Recurso);
 
-        return await response.Content.ReadFromJsonAsync<IEnumerable<ContaResumoDto>>();
-    }
+    public Task<ContaDto?> ObterPorIdAsync(int id) =>
+        api.ObterAsync<ContaDto>($"{Recurso}/{id}");
 
-    public async Task<bool> AtualizarSaldosAsync(IEnumerable<ContaResumoDto> contas)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Put, "api/contas/saldos")
-        {
-            Content = JsonContent.Create(contas)
-        };
-        if (authSession.Token is not null)
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authSession.Token);
+    public Task<ApiResultado> AdicionarAsync(AdicionarContaDto dto) =>
+        api.AdicionarAsync(Recurso, dto);
 
-        var response = await httpClient.SendAsync(request);
-        return response.IsSuccessStatusCode;
-    }
+    public Task<ApiResultado> AtualizarAsync(int id, AtualizarContaDto dto) =>
+        api.AtualizarAsync($"{Recurso}/{id}", dto);
+
+    public Task<ApiResultado> InativarAsync(int id) =>
+        api.PatchAsync($"{Recurso}/{id}/inativar");
+
+    public Task<ApiResultado> ExcluirAsync(int id) =>
+        api.ExcluirAsync($"{Recurso}/{id}");
+
+    // Usados pelo dashboard (Home.razor), não pela listagem.
+    public Task<IEnumerable<ContaResumoDto>?> ObterResumoAsync() =>
+        api.ObterAsync<IEnumerable<ContaResumoDto>>($"{Recurso}/resumo");
+
+    public async Task<bool> AtualizarSaldosAsync(IEnumerable<ContaResumoDto> contas) =>
+        (await api.AtualizarAsync($"{Recurso}/saldos", contas)).Sucesso;
 }

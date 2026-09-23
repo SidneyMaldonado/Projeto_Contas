@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Contas_App.Services;
 using Plugin.Fingerprint.Abstractions;
 
@@ -12,12 +12,14 @@ public partial class LoginPage : ContentPage
 
     private readonly AuthApiService _authApi;
     private readonly IFingerprint _fingerprint;
+    private readonly AppSession _session;
 
-    public LoginPage(AuthApiService authApi, IFingerprint fingerprint)
+    public LoginPage(AuthApiService authApi, IFingerprint fingerprint, AppSession session)
     {
         InitializeComponent();
         _authApi = authApi;
         _fingerprint = fingerprint;
+        _session = session;
     }
 
     protected override async void OnAppearing()
@@ -108,10 +110,14 @@ public partial class LoginPage : ContentPage
             return;
         }
 
+        // Sem guardar o token aqui as telas seguintes tomariam 401: a API exige
+        // usuario autenticado em todos os endpoints (FallbackPolicy).
+        _session.SignIn(result.Token!, result.Usuario!);
+
         if (offerBiometricSetup && !CredentialStore.IsEnabled)
             await OfferBiometricSetupAsync(email, senha);
 
-        await Shell.Current.GoToAsync("//MainPage");
+        await Shell.Current.GoToAsync("//Home/MainPage");
     }
 
     private async Task OfferBiometricSetupAsync(string email, string senha)

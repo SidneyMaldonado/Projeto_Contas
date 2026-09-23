@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Contas_Contratos.Dto;
@@ -7,18 +7,12 @@ namespace Contas_App.Services;
 
 public class AuthApiService
 {
-#if ANDROID
-    private const string BaseUrl = "http://10.0.2.2:5210/";
-#else
-    private const string BaseUrl = "http://localhost:5210/";
-#endif
-
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    private readonly HttpClient _httpClient = new() { BaseAddress = new Uri(BaseUrl) };
+    private readonly HttpClient _httpClient = new() { BaseAddress = new Uri(ApiConfig.BaseUrl) };
 
     public async Task<LoginResult> LoginAsync(string email, string senha)
     {
